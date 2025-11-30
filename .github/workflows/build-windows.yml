@@ -13,7 +13,7 @@ jobs:
     
     strategy:
       matrix:
-        platform: [x64, Win32]
+        platform: [x64]
         configuration: [Release]
     
     steps:
@@ -63,7 +63,7 @@ jobs:
       with:
         name: LofiTapeSaturator-VST3-Windows-${{ matrix.platform }}
         path: ./artifacts/${{ matrix.platform }}/Lofi Tape Saturator.vst3/
-        retention-days: 30
+        retention-days: 90
     
     - name: Create Release Archive
       if: startsWith(github.ref, 'refs/tags/')
@@ -78,55 +78,3 @@ jobs:
         files: ./LofiTapeSaturator_v1.0.9_Windows_${{ matrix.platform }}_VST3.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  combine-artifacts:
-    runs-on: windows-latest
-    needs: build-windows
-    if: success()
-    
-    steps:
-    - name: Download x64 Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: LofiTapeSaturator-VST3-Windows-x64
-        path: ./combined/x64/
-    
-    - name: Download Win32 Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: LofiTapeSaturator-VST3-Windows-Win32
-        path: ./combined/Win32/
-    
-    - name: Create Combined Package
-      run: |
-        New-Item -ItemType Directory -Force -Path ./release
-        
-        @"
-        ===============================================
-          LOFI TAPE SATURATOR v1.0.9 - Windows VST3
-        ===============================================
-        
-        INSTALLATION:
-        
-        For 64-bit DAW (Ableton, FL Studio, etc):
-        1. Copy folder from 'x64' to:
-           C:\Program Files\Common Files\VST3\
-        
-        For 32-bit DAW (older versions):
-        1. Copy folder from 'Win32' to:
-           C:\Program Files (x86)\Common Files\VST3\
-        
-        2. Rescan VST3 plugins in your DAW
-        
-        SUPPORT:
-        support@itbblog.com
-        "@ | Out-File -FilePath ./combined/INSTALL.txt -Encoding utf8
-        
-        Compress-Archive -Path ./combined/* -DestinationPath ./release/LofiTapeSaturator_v1.0.9_Windows_Complete.zip
-    
-    - name: Upload Combined Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: LofiTapeSaturator-VST3-Windows-Complete
-        path: ./release/LofiTapeSaturator_v1.0.9_Windows_Complete.zip
-        retention-days: 90
