@@ -101,32 +101,28 @@ jobs:
       run: |
         New-Item -ItemType Directory -Force -Path ./release
         
-        # Create installation structure
-        $readmeContent = @"
-===============================================
-  LOFI TAPE SATURATOR v1.0.9 - Windows VST3
-===============================================
-
-INSTALLATION:
-
-For 64-bit DAW (Ableton, FL Studio, etc):
-1. Copy folder from 'x64' to:
-   C:\Program Files\Common Files\VST3\
-
-For 32-bit DAW (older versions):
-1. Copy folder from 'Win32' to:
-   C:\Program Files (x86)\Common Files\VST3\
-
-2. Rescan VST3 plugins in your DAW
-
-SUPPORT:
-support@itbblog.com
-"@
+        @"
+        ===============================================
+          LOFI TAPE SATURATOR v1.0.9 - Windows VST3
+        ===============================================
         
-        Set-Content -Path ./combined/INSTALL.txt -Value $readmeContent
+        INSTALLATION:
         
-        Compress-Archive -Path ./combined/* `
-          -DestinationPath ./release/LofiTapeSaturator_v1.0.9_Windows_Complete.zip
+        For 64-bit DAW (Ableton, FL Studio, etc):
+        1. Copy folder from 'x64' to:
+           C:\Program Files\Common Files\VST3\
+        
+        For 32-bit DAW (older versions):
+        1. Copy folder from 'Win32' to:
+           C:\Program Files (x86)\Common Files\VST3\
+        
+        2. Rescan VST3 plugins in your DAW
+        
+        SUPPORT:
+        support@itbblog.com
+        "@ | Out-File -FilePath ./combined/INSTALL.txt -Encoding utf8
+        
+        Compress-Archive -Path ./combined/* -DestinationPath ./release/LofiTapeSaturator_v1.0.9_Windows_Complete.zip
     
     - name: Upload Combined Package
       uses: actions/upload-artifact@v4
