@@ -34,9 +34,9 @@ jobs:
         # Ensure parent directory exists
         New-Item -ItemType Directory -Force -Path "iPlug2\Dependencies\IPlug" | Out-Null
         
-        # Clone VST3 SDK
-        Write-Host "Cloning VST3 SDK..."
-        git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git $sdkPath
+        # Clone VST3 SDK with submodules
+        Write-Host "Cloning VST3 SDK with submodules..."
+        git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git $sdkPath
         
         if ($LASTEXITCODE -ne 0) {
           Write-Host "ERROR: Git clone failed!"
@@ -45,7 +45,7 @@ jobs:
         
         # Verify structure
         Write-Host "`n=== Verifying VST3 SDK structure ==="
-        $requiredDirs = @("base", "public.sdk", "pluginterfaces", "base\source")
+        $requiredDirs = @("base", "public.sdk", "pluginterfaces")
         
         foreach ($dir in $requiredDirs) {
           $fullPath = Join-Path $sdkPath $dir
