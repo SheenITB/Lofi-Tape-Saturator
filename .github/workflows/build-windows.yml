@@ -23,6 +23,17 @@ jobs:
         submodules: recursive
         fetch-depth: 1  # Shallow clone per evitare history con file grandi
     
+    - name: Move project to iPlug2/Examples structure
+      run: |
+        # Create Examples directory if it doesn't exist
+        New-Item -ItemType Directory -Force -Path "iPlug2/Examples"
+        
+        # Move IPlugWebUI into iPlug2/Examples/
+        Move-Item -Path "IPlugWebUI" -Destination "iPlug2/Examples/IPlugWebUI" -Force
+        
+        # Set working directory for subsequent steps
+        echo "PROJECT_DIR=${{ github.workspace }}/iPlug2/Examples/IPlugWebUI" >> $env:GITHUB_ENV
+    
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3
     
@@ -32,11 +43,11 @@ jobs:
         sdk-version: 19041
     
     - name: Restore NuGet Packages
-      run: nuget restore IPlugWebUI/IPlugWebUI.sln
+      run: nuget restore iPlug2/Examples/IPlugWebUI/IPlugWebUI.sln
     
     - name: Build VST3 ${{ matrix.platform }}
       run: |
-        msbuild IPlugWebUI/IPlugWebUI.sln `
+        msbuild iPlug2/Examples/IPlugWebUI/IPlugWebUI.sln `
           /p:Configuration=${{ matrix.configuration }} `
           /p:Platform=${{ matrix.platform }} `
           /t:IPlugWebUI-vst3 `
@@ -49,12 +60,12 @@ jobs:
     
     - name: Copy VST3 Bundle
       run: |
-        $vst3Path = "IPlugWebUI/build-win/${{ matrix.platform }}/${{ matrix.configuration }}/VST3/Lofi Tape Saturator.vst3"
+        $vst3Path = "iPlug2/Examples/IPlugWebUI/build-win/${{ matrix.platform }}/${{ matrix.configuration }}/VST3/Lofi Tape Saturator.vst3"
         if (Test-Path $vst3Path) {
           Copy-Item -Path $vst3Path -Destination ./artifacts/${{ matrix.platform }}/ -Recurse -Force
         } else {
           Write-Host "VST3 not found at: $vst3Path"
-          Get-ChildItem -Path "IPlugWebUI/build-win" -Recurse
+          Get-ChildItem -Path "iPlug2/Examples/IPlugWebUI/build-win" -Recurse
           exit 1
         }
     
