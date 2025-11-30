@@ -53,6 +53,14 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3
     
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v1
+    
+    - name: Restore NuGet Packages
+      shell: pwsh
+      run: |
+        nuget restore iPlug2/Examples/IPlugWebUI/IPlugWebUI.sln
+    
     - name: Build VST3 x64
       shell: pwsh
       run: |
