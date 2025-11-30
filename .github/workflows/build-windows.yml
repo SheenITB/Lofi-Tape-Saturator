@@ -24,42 +24,35 @@ jobs:
         fetch-depth: 1
     
     - name: Initialize VST3 SDK
+      shell: pwsh
       run: |
-        # Check if VST3_SDK is properly initialized
-        $vst3Path = "iPlug2/Dependencies/IPlug/VST3_SDK"
-        $needsClone = $true
+        # Ensure iPlug2/Dependencies/IPlug exists
+        New-Item -ItemType Directory -Force -Path iPlug2\Dependencies\IPlug | Out-Null
         
-        if (Test-Path "$vst3Path/base") {
-          Write-Host "✓ VST3_SDK already properly initialized"
-          $needsClone = $false
-        } elseif (Test-Path $vst3Path) {
-          Write-Host "VST3_SDK directory exists but is empty, removing..."
+        $vst3Path = "iPlug2\Dependencies\IPlug\VST3_SDK"
+        
+        # Remove if exists but empty
+        if ((Test-Path $vst3Path) -and !(Test-Path "$vst3Path\base")) {
+          Write-Host "Removing empty VST3_SDK directory..."
           Remove-Item $vst3Path -Recurse -Force
         }
         
-        if ($needsClone) {
-          Write-Host "Cloning VST3 SDK from GitHub..."
-          
-          # Ensure parent directory exists
-          New-Item -ItemType Directory -Force -Path "iPlug2/Dependencies/IPlug" | Out-Null
-          
-          # Clone VST3 SDK
-          git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git temp_vst3
-          
-          # Move to correct location
-          Move-Item "temp_vst3" $vst3Path -Force
-          
+        # Clone if needed
+        if (!(Test-Path "$vst3Path\base")) {
+          Write-Host "Cloning VST3 SDK from Steinberg GitHub..."
+          git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git $vst3Path
           Write-Host "✓ VST3_SDK cloned successfully"
+        } else {
+          Write-Host "✓ VST3_SDK already present and verified"
         }
         
-        # Final verification
-        if (Test-Path "$vst3Path/base") {
-          Write-Host "✓ VST3_SDK verified - base folder found"
-          Get-ChildItem $vst3Path | Select-Object Name | Format-Table -HideTableHeaders
+        # Verify
+        if (Test-Path "$vst3Path\base") {
+          Write-Host "✓ VST3_SDK installation verified"
+          Write-Host "Contents:"
+          Get-ChildItem $vst3Path | Select-Object Name | Format-Table -AutoSize
         } else {
           Write-Host "✗ VST3_SDK installation failed!"
-          Write-Host "Contents of iPlug2/Dependencies/IPlug:"
-          Get-ChildItem "iPlug2/Dependencies/IPlug" -ErrorAction SilentlyContinue
           exit 1
         }
     
