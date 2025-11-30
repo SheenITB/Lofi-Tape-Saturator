@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InTheBox - Lo-Fi Tape Saturator</title>
+    <meta name="description" content="Professional vintage tape saturation effect with design tokens system" />
+    
+    <!-- ⚡ Performance: Preload Critical Resources -->
+    <link rel="preload" href="./assets/design-tokens-BQQBbaMM.json" as="fetch" crossorigin="anonymous" />
+    
+    <!-- 🎨 Design System: Inline Critical CSS for FOUC Prevention -->
+    <style>
+      /* Prevent Flash of Unstyled Content */
+      #root {
+        opacity: 0;
+        transition: opacity 400ms ease-out;
+      }
+      
+      #root.loaded {
+        opacity: 1;
+      }
+      
+      /* Loading indicator while scripts load */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(145deg, #1a0d06 0%, #2a1810 100%);
+        z-index: 99999;
+        pointer-events: none;
+        opacity: 1;
+        transition: opacity 300ms ease-out;
+      }
+      
+      body.scripts-loaded::before {
+        opacity: 0;
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-DDHL9nsD.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-mEI70OEm.css">
+  </head>
+
+  <body>
+    <div id="root"></div>
+    
+    <!-- Mark scripts as loaded -->
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        document.body.classList.add('scripts-loaded');
+      });
+    </script>
+  </body>
+</html>

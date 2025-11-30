@@ -1,0 +1,146 @@
+# Git Ignore for Audio Plugin Project
+
+# ============================================
+# macOS Build Artifacts
+# ============================================
+build-mac/
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+*.dSYM/
+
+# ============================================
+# Windows Build Artifacts  
+# ============================================
+build-win/
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.obj
+*.pdb
+*.ilk
+*.log
+*.iobj
+*.ipdb
+*.tlog
+*.lastbuildstate
+*.recipe
+[Dd]ebug/
+[Rr]elease/
+[Tt]racer/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+ipch/
+*.VC.db
+*.VC.opendb
+.vs/
+
+# ============================================
+# Plugin Deployed Locations (Optional)
+# ============================================
+# Uncomment if you don't want deployed plugins in repo
+# *.vst3
+# *.component
+
+# ============================================
+# macOS System Files
+# ============================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# ============================================
+# IDEs and Editors
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.cproject
+.settings/
+
+# ============================================
+# Node.js (for web UI build)
+# ============================================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.bak
+*.cache
+*.temp
+Thumbs.db
+
+# ============================================
+# Audio Plugin Specific
+# ============================================
+# Reaper project backups
+*.RPP-bak
+*.rpp-bak
+
+# AAX SDK (if not included)
+# SDKs/AAX_SDK/
+
+# VST2 SDK (deprecated)
+# SDKs/VST2_SDK/
+
+# Compiled presets/banks
+*.fxp
+*.fxb
+
+# ============================================
+# Git Specific
+# ============================================
+*.orig
+*.rej
+*.patch
+
+# ============================================
+# Build Logs
+# ============================================
+*.log
+msbuild.log
+build.log
+xcodebuild.log
+
+# ============================================
+# Distribution Packages (Generated)
+# ============================================
+*.zip
+*.tar.gz
+*.dmg
+*.pkg
+*.exe
+*.msi
+
+# ============================================
+# Documentation Build
+# ============================================
+docs/_build/
+site/
+
+# ============================================
+# GitHub Actions Cache (Local)
+# ============================================
+.github-actions-cache/

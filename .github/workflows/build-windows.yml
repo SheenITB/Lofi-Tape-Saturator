@@ -1,0 +1,135 @@
+name: Build VST3 Windows
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Permette build manuale
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        platform: [x64, Win32]
+        configuration: [Release]
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+    
+    - name: Setup Windows SDK
+      uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
+      with:
+        sdk-version: 19041
+    
+    - name: Restore NuGet Packages
+      run: nuget restore IPlugWebUI/IPlugWebUI.sln
+    
+    - name: Build VST3 ${{ matrix.platform }}
+      run: |
+        msbuild IPlugWebUI/IPlugWebUI.sln `
+          /p:Configuration=${{ matrix.configuration }} `
+          /p:Platform=${{ matrix.platform }} `
+          /t:IPlugWebUI-vst3 `
+          /m `
+          /v:minimal
+    
+    - name: Create Artifact Directory
+      run: |
+        New-Item -ItemType Directory -Force -Path ./artifacts/${{ matrix.platform }}
+    
+    - name: Copy VST3 Bundle
+      run: |
+        $vst3Path = "IPlugWebUI/build-win/${{ matrix.platform }}/${{ matrix.configuration }}/VST3/Lofi Tape Saturator.vst3"
+        if (Test-Path $vst3Path) {
+          Copy-Item -Path $vst3Path -Destination ./artifacts/${{ matrix.platform }}/ -Recurse -Force
+        } else {
+          Write-Host "VST3 not found at: $vst3Path"
+          Get-ChildItem -Path "IPlugWebUI/build-win" -Recurse
+          exit 1
+        }
+    
+    - name: Upload VST3 ${{ matrix.platform }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: LofiTapeSaturator-VST3-Windows-${{ matrix.platform }}
+        path: ./artifacts/${{ matrix.platform }}/Lofi Tape Saturator.vst3/
+        retention-days: 30
+    
+    - name: Create Release Archive
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        Compress-Archive -Path ./artifacts/${{ matrix.platform }}/* `
+          -DestinationPath ./LofiTapeSaturator_v1.0.9_Windows_${{ matrix.platform }}_VST3.zip
+    
+    - name: Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./LofiTapeSaturator_v1.0.9_Windows_${{ matrix.platform }}_VST3.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  combine-artifacts:
+    runs-on: windows-latest
+    needs: build-windows
+    if: success()
+    
+    steps:
+    - name: Download x64 Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: LofiTapeSaturator-VST3-Windows-x64
+        path: ./combined/x64/
+    
+    - name: Download Win32 Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: LofiTapeSaturator-VST3-Windows-Win32
+        path: ./combined/Win32/
+    
+    - name: Create Combined Package
+      run: |
+        New-Item -ItemType Directory -Force -Path ./release
+        
+        # Create installation structure
+        $readmeContent = @"
+===============================================
+  LOFI TAPE SATURATOR v1.0.9 - Windows VST3
+===============================================
+
+INSTALLATION:
+
+For 64-bit DAW (Ableton, FL Studio, etc):
+1. Copy folder from 'x64' to:
+   C:\Program Files\Common Files\VST3\
+
+For 32-bit DAW (older versions):
+1. Copy folder from 'Win32' to:
+   C:\Program Files (x86)\Common Files\VST3\
+
+2. Rescan VST3 plugins in your DAW
+
+SUPPORT:
+support@itbblog.com
+"@
+        
+        Set-Content -Path ./combined/INSTALL.txt -Value $readmeContent
+        
+        Compress-Archive -Path ./combined/* `
+          -DestinationPath ./release/LofiTapeSaturator_v1.0.9_Windows_Complete.zip
+    
+    - name: Upload Combined Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: LofiTapeSaturator-VST3-Windows-Complete
+        path: ./release/LofiTapeSaturator_v1.0.9_Windows_Complete.zip
+        retention-days: 90

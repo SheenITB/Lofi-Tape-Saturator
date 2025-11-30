@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug React GUI (Browser)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "preLaunchTask": "Dev Server (React)"
+    },
+    {
+      "name": "Debug Plugin in DAW (macOS)",
+      "type": "lldb",
+      "request": "launch",
+      "program": "/Applications/Logic Pro X.app/Contents/MacOS/Logic Pro X",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build Plugin (Full)",
+      "osx": {
+        "MIMode": "lldb"
+      }
+    },
+    {
+      "name": "Debug Plugin in DAW (Windows)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "C:/Program Files/Steinberg/Cubase/Cubase.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "externalTerminal",
+      "preLaunchTask": "Build Plugin (Full)"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Plugin + React GUI",
+      "configurations": ["Debug Plugin in DAW (macOS)", "Debug React GUI (Browser)"],
+      "stopAll": true
+    }
+  ]
+}

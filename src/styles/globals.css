@@ -1,0 +1,347 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* IntheBox Figma Design Tokens v1.0.9 - EXACT MATCH */
+  
+  /* === COLORS FROM FIGMA === */
+  /* Wood Chassis Colors */
+  --color-wood-dark: #2a1810;
+  --color-wood-medium: #3d2817;
+  --color-wood-light: #4a3428;
+  
+  /* Beige Panel Colors */
+  --color-panel-light: #e8d8c0;
+  --color-panel-medium: #d4c4a8;
+  --color-panel-dark: #c0b090;
+  
+  /* Bakelite Colors (Knobs) */
+  --color-bakelite-dark: #1a1510;
+  --color-bakelite-medium: #2a2218;
+  
+  /* Bronze/Gold Accents */
+  --color-bronze-light: #d4a574;
+  --color-bronze-medium: #c8a870;
+  --color-bronze-dark: #a88850;
+  --color-bronze-shadow: #8a6830;
+  
+  /* LED Indicators */
+  --color-led-power-on: #ff8800;
+  --color-led-clip-on: #ff2200;
+  --color-led-off: #2a1808;
+  
+  /* Text Colors */
+  --color-text-primary: #3a2010;
+  --color-text-secondary: #5a3820;
+  --color-text-label: #d4a574;
+  --color-text-muted: #8a6850;
+  
+  /* Glow Effects */
+  --color-glow-orange: #ff8800;
+  --color-glow-yellow: #ffdc64;
+  
+  /* === SIZING FROM FIGMA === */
+  --size-gui-width-full: 600px;
+  --size-gui-height-full: 800px;
+  --size-knob-diameter: 60px;
+  --size-vu-meter-width: 240px;
+  --size-vu-meter-height: 60px;
+  --size-tape-reels-width: 200px;
+  --size-tape-reels-height: 120px;
+  --size-screw-diameter: 8px;
+  --size-led-diameter: 6px;
+  
+  /* === SPACING FROM FIGMA === */
+  --spacing-panel-padding: 12px;
+  --spacing-component-gap: 8px;
+  --spacing-knob-gap: 8px;
+  --spacing-section-gap: 8px;
+  
+  /* === TYPOGRAPHY FROM FIGMA === */
+  --typography-font-families-serif: Georgia, serif;
+  --typography-font-families-sans: Arial, sans-serif;
+  --typography-font-sizes-logo-main: 12px;
+  --typography-font-sizes-logo-sub: 6px;
+  --typography-font-sizes-section-label: 7px;
+  --typography-font-sizes-knob-label: 7px;
+  --typography-font-sizes-knob-value: 10px;
+  --typography-font-weights-normal: 400;
+  --typography-font-weights-medium: 500;
+  --typography-font-weights-bold: 700;
+  --typography-letter-spacing-wide: 0.18em;
+  --typography-letter-spacing-normal: 0.12em;
+  
+  /* === BORDERS FROM FIGMA === */
+  --border-radius-small: 1px;
+  --border-radius-medium: 2px;
+  --border-radius-large: 4px;
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  
+  /* === SHADOWS FROM FIGMA === */
+  --shadow-chassis: 0 30px 80px rgba(0,0,0,0.9), inset 0 2px 1px rgba(255,200,150,0.1);
+  --shadow-panel: 0 16px 48px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,240,220,0.6), inset 0 -2px 6px rgba(80,50,30,0.3), 0 0 0 2px #a89070;
+  --shadow-knob: 0 4px 12px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.9), inset 0 -1px 2px rgba(80,60,40,0.2);
+  --shadow-screw: inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 2px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.5);
+  
+  /* === GRADIENTS FROM FIGMA === */
+  --gradient-wood-chassis: linear-gradient(145deg, #3d2817, #2d1810);
+  --gradient-panel: linear-gradient(145deg, #e8d8c0 0%, #d4c4a8 50%, #c0b090 100%);
+  --gradient-bakelite: linear-gradient(145deg, #2a2218, #1a1510);
+  --gradient-bronze: linear-gradient(180deg, #c8a870, #a88850);
+  
+  /* === EFFECTS FROM FIGMA === */
+  --effect-transition-smooth: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  --effect-transition-fast: 200ms ease;
+  
+  /* === LEGACY COMPATIBILITY (manteniamo per retrocompatibilità) === */
+  --wood-dark: var(--color-wood-dark);
+  --wood-medium: var(--color-wood-medium);
+  --wood-light: var(--color-wood-light);
+  --panel-light: var(--color-panel-light);
+  --panel-medium: var(--color-panel-medium);
+  --panel-dark: var(--color-panel-dark);
+  --bakelite-dark: var(--color-bakelite-dark);
+  --bakelite-medium: var(--color-bakelite-medium);
+  --bronze-light: var(--color-bronze-light);
+  --bronze-medium: var(--color-bronze-medium);
+  --bronze-dark: var(--color-bronze-dark);
+  --bronze-shadow: var(--color-bronze-shadow);
+  --led-power-on: var(--color-led-power-on);
+  --led-clip-on: var(--color-led-clip-on);
+  --led-off: var(--color-led-off);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-label: var(--color-text-label);
+  --text-muted: var(--color-text-muted);
+  --glow-orange: var(--color-glow-orange);
+  --glow-yellow: var(--color-glow-yellow);
+  --gui-width: var(--size-gui-width-full);
+  --gui-height: var(--size-gui-height-full);
+  --knob-medium: var(--size-knob-diameter);
+  --vu-meter-width: var(--size-vu-meter-width);
+  --vu-meter-height: var(--size-vu-meter-height);
+  --screw-size: var(--size-screw-diameter);
+  --led-size: var(--size-led-diameter);
+  --font-serif: var(--typography-font-families-serif);
+  --font-sans: var(--typography-font-families-sans);
+  --font-size-logo: var(--typography-font-sizes-logo-main);
+  --font-size-label: var(--typography-font-sizes-section-label);
+  --font-size-value: var(--typography-font-sizes-knob-value);
+  --letter-spacing-wide: var(--typography-letter-spacing-wide);
+  --letter-spacing-normal: var(--typography-letter-spacing-normal);
+  --transition-smooth: var(--effect-transition-smooth);
+  --transition-fast: var(--effect-transition-fast);
+  --gradient-led-power: radial-gradient(circle, #ff8800, #cc5500);
+  --gradient-led-clip: radial-gradient(circle, #ff2200, #aa0000);
+  --gradient-led-off: radial-gradient(circle, #2a1808, #0a0000);
+  --gradient-screw: radial-gradient(circle at 30% 30%, #8a8a8a, #2a2a2a);
+  
+  /* Shadows */
+  --shadow-chassis: 0 30px 80px rgba(0,0,0,0.9), inset 0 2px 1px rgba(255,200,150,0.1);
+  --shadow-panel: 0 16px 48px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,240,220,0.6), inset 0 -2px 6px rgba(80,50,30,0.3), 0 0 0 2px #a89070;
+  --shadow-knob: 0 4px 12px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.9), inset 0 -1px 2px rgba(80,60,40,0.2);
+  --shadow-screw: inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 2px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.5);
+  
+  /* Dimensions */
+  --gui-width: 600px;
+  --gui-height: 800px;
+  --knob-medium: 60px;
+  --knob-small: 50px;
+  --vu-meter-width: 240px;
+  --vu-meter-height: 60px;
+  --screw-size: 8px;
+  --led-size: 6px;
+  
+  /* Typography */
+  --font-serif: Georgia, serif;
+  --font-sans: Arial, sans-serif;
+  --font-size-logo: 12px;
+  --font-size-label: 7px;
+  --font-size-value: 10px;
+  --letter-spacing-wide: 0.18em;
+  --letter-spacing-normal: 0.12em;
+  
+  /* Transitions */
+  --transition-smooth: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 200ms ease;
+  
+  /* Legacy Tailwind tokens (kept for compatibility) */
+  --font-size: 16px;
+  --background: #2a1810;
+  --foreground: #e8d8c0;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+  }
+
+  body {
+    background: var(--wood-dark);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-sans);
+  }
+  
+  #root {
+    isolation: isolate;
+  }
+
+  /* Custom easing for smooth GUI scaling */
+  @keyframes smooth-scale {
+    from {
+      transform: scale(var(--scale-from, 1));
+    }
+    to {
+      transform: scale(var(--scale-to, 1));
+    }
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
