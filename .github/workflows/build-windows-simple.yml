@@ -82,20 +82,32 @@ jobs:
       run: |
         Write-Host "=== Testing VST3 SDK path from project directory ==="
         
-        # From IPlugWebUI/projects/ the path should be ../../../iPlug2/Dependencies/IPlug/VST3_SDK
+        # From IPlugWebUI/projects/ the correct path is ../../iPlug2/Dependencies/IPlug/VST3_SDK
+        # Because: projects/ -> IPlugWebUI/ -> repo_root/ -> iPlug2/
         Set-Location "IPlugWebUI\projects"
         
-        $relPath = "..\..\..\iPlug2\Dependencies\IPlug\VST3_SDK"
-        $absPath = Resolve-Path $relPath -ErrorAction SilentlyContinue
+        $relPath = "..\..\iPlug2\Dependencies\IPlug\VST3_SDK"
         
-        if ($absPath -and (Test-Path "$relPath\base")) {
+        Write-Host "Current location: $(Get-Location)"
+        Write-Host "Testing path: $relPath"
+        
+        if (Test-Path $relPath) {
+          $absPath = Resolve-Path $relPath
           Write-Host "✓ VST3 SDK accessible from project: $absPath"
+          
+          # Verify base directory exists
+          if (Test-Path "$relPath\base") {
+            Write-Host "✓ base/ directory found"
+          } else {
+            Write-Host "✗ base/ directory missing"
+            exit 1
+          }
         } else {
           Write-Host "✗ ERROR: VST3 SDK NOT accessible from project directory"
-          Write-Host "Expected path: $relPath"
-          Write-Host "Current location: $(Get-Location)"
-          Write-Host "`nDirectory structure:"
-          Get-ChildItem ..\..\.. | Select-Object Name
+          Write-Host "`nDirectory listing from current location:"
+          Get-ChildItem ..\.. | Select-Object Name
+          Write-Host "`nSearching for iPlug2:"
+          Get-ChildItem ..\..\iPlug2 -ErrorAction SilentlyContinue | Select-Object Name
           exit 1
         }
         
