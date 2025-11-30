@@ -18,31 +18,72 @@ jobs:
     - name: Initialize VST3 SDK in submodule
       shell: pwsh
       run: |
-        cd iPlug2/Dependencies/IPlug
+        Write-Host "=== Initializing VST3 SDK ==="
         
-        if (!(Test-Path "VST3_SDK/base")) {
-          Write-Host "Initializing VST3 SDK..."
-          
-          # Remove empty directory if exists
-          if (Test-Path "VST3_SDK") {
-            Remove-Item VST3_SDK -Recurse -Force
-          }
-          
-          # Clone VST3 SDK directly into submodule
-          git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git VST3_SDK
-          
-          Write-Host "✓ VST3 SDK initialized"
-        } else {
-          Write-Host "✓ VST3 SDK already present"
+        # Navigate to Dependencies/IPlug
+        Set-Location iPlug2/Dependencies/IPlug
+        
+        $vst3Path = "VST3_SDK"
+        
+        # Always remove and re-clone to ensure fresh SDK
+        if (Test-Path $vst3Path) {
+          Write-Host "Removing existing VST3_SDK directory..."
+          Remove-Item $vst3Path -Recurse -Force -ErrorAction SilentlyContinue
         }
         
-        # Verify
-        if (Test-Path "VST3_SDK/base") {
-          Write-Host "✓ Verified: VST3_SDK/base exists"
-        } else {
-          Write-Host "✗ Error: VST3_SDK/base not found"
+        # Clone VST3 SDK
+        Write-Host "Cloning VST3 SDK from Steinberg GitHub..."
+        git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git $vst3Path
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "ERROR: Git clone failed!"
           exit 1
         }
+        
+        Write-Host "✓ VST3 SDK cloned successfully"
+        
+        # Verify critical directories exist
+        $requiredDirs = @(
+          "$vst3Path/base",
+          "$vst3Path/public.sdk",
+          "$vst3Path/pluginterfaces"
+        )
+        
+        $allExist = $true
+        foreach ($dir in $requiredDirs) {
+          if (Test-Path $dir) {
+            Write-Host "✓ Found: $dir"
+          } else {
+            Write-Host "✗ MISSING: $dir"
+            $allExist = $false
+          }
+        }
+        
+        if (!$allExist) {
+          Write-Host "ERROR: VST3 SDK structure incomplete!"
+          Write-Host "Contents of VST3_SDK:"
+          Get-ChildItem $vst3Path | Select-Object Name
+          exit 1
+        }
+        
+        # List some key source files to verify
+        Write-Host "`n=== Verifying key source files ==="
+        $keyFiles = @(
+          "$vst3Path/base/source/baseiids.cpp",
+          "$vst3Path/pluginterfaces/base/funknown.cpp",
+          "$vst3Path/public.sdk/source/vst/vstaudioeffect.cpp"
+        )
+        
+        foreach ($file in $keyFiles) {
+          if (Test-Path $file) {
+            Write-Host "✓ $file"
+          } else {
+            Write-Host "✗ MISSING: $file"
+          }
+        }
+        
+        Write-Host "`n✓ VST3 SDK initialization complete"
+        Set-Location ../../..
     
     - name: Move to Examples structure
       shell: pwsh
