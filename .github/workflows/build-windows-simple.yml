@@ -10,10 +10,23 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - name: Checkout with submodules
+    - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    
+    - name: Initialize submodules
+      shell: pwsh
+      run: |
+        Write-Host "=== Initializing iPlug2 submodule ==="
+        git submodule update --init --recursive
+        
+        if (Test-Path "iPlug2\IPlug\VST3\IPlugVST3_ProcessorBase.cpp") {
+          Write-Host "✓ iPlug2 submodule initialized correctly"
+        } else {
+          Write-Host "✗ ERROR: iPlug2 files not found"
+          Write-Host "Checking iPlug2 directory:"
+          Get-ChildItem iPlug2 -ErrorAction SilentlyContinue | Select-Object Name
+          exit 1
+        }
     
     - name: Initialize VST3 SDK
       shell: pwsh
