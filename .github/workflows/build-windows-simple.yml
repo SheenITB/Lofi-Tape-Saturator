@@ -112,6 +112,24 @@ jobs:
       run: |
         nuget restore IPlugWebUI\IPlugWebUI.sln
     
+    - name: Build VST3 x64
+      shell: pwsh
+      run: |
+        Write-Host "=== Building VST3 x64 Release ==="
+        msbuild IPlugWebUI\IPlugWebUI.sln `
+          /p:Configuration=Release `
+          /p:Platform=x64 `
+          /t:IPlugWebUI-vst3 `
+          /m `
+          /v:minimal
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "ERROR: Build failed!"
+          exit 1
+        }
+        
+        Write-Host "✓ Build completed successfully"
+    
     - name: Package VST3
       shell: pwsh
       run: |
