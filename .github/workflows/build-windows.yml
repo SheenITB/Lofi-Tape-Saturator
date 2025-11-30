@@ -20,57 +20,34 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
-        submodules: recursive
-        fetch-depth: 1  # Shallow clone per evitare history con file grandi
+        submodules: 'recursive'
+        fetch-depth: 1
     
-    - name: Download iPlug2 Dependencies
+    - name: Initialize VST3 SDK
       run: |
-        cd iPlug2/Dependencies
-        
-        # Download Windows dependencies
-        Write-Host "Downloading iPlug2 dependencies..."
-        $url = "https://github.com/iPlug2/iPlug2/releases/download/v1.0.0-beta/IPLUG2_DEPS_WIN.zip"
-        Invoke-WebRequest -Uri $url -OutFile "IPLUG2_DEPS_WIN.zip"
-        
-        # Extract
-        Write-Host "Extracting dependencies..."
-        Expand-Archive -Path "IPLUG2_DEPS_WIN.zip" -DestinationPath "." -Force
-        
-        # The zip contains IPLUG2_DEPS_WIN folder with libs and src
-        # Move src contents (VST3_SDK, etc.) to IPlug directory
-        if (Test-Path "IPLUG2_DEPS_WIN/src") {
-          Write-Host "Moving source files..."
-          Get-ChildItem -Path "IPLUG2_DEPS_WIN/src" | ForEach-Object {
-            $dest = Join-Path "IPlug" $_.Name
-            Write-Host "  Moving $($_.Name) to $dest"
-            if (Test-Path $dest) {
-              Remove-Item $dest -Recurse -Force
-            }
-            Move-Item $_.FullName $dest -Force
-          }
-        }
-        
-        # Move win libs to Build/win
-        if (Test-Path "IPLUG2_DEPS_WIN/win") {
-          Write-Host "Moving Windows libraries..."
-          New-Item -ItemType Directory -Force -Path "Build/win"
-          Get-ChildItem -Path "IPLUG2_DEPS_WIN/win" | Move-Item -Destination "Build/win" -Force
-        }
-        
-        # Cleanup
-        Remove-Item "IPLUG2_DEPS_WIN" -Recurse -Force -ErrorAction SilentlyContinue
-        Remove-Item "IPLUG2_DEPS_WIN.zip" -Force
-        
-        Write-Host "`nVerifying VST3_SDK installation:"
-        if (Test-Path "IPlug/VST3_SDK") {
-          Write-Host "✓ VST3_SDK found at IPlug/VST3_SDK"
-          Get-ChildItem "IPlug/VST3_SDK" | Select-Object Name
+        # Check if VST3_SDK already exists
+        if (!(Test-Path "iPlug2/Dependencies/IPlug/VST3_SDK")) {
+          Write-Host "VST3_SDK not found, cloning from GitHub..."
+          
+          # Clone VST3 SDK
+          git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git temp_vst3
+          
+          # Move to correct location
+          New-Item -ItemType Directory -Force -Path "iPlug2/Dependencies/IPlug"
+          Move-Item "temp_vst3" "iPlug2/Dependencies/IPlug/VST3_SDK"
+          
+          Write-Host "✓ VST3_SDK cloned successfully"
         } else {
-          Write-Host "✗ VST3_SDK NOT found!"
+          Write-Host "✓ VST3_SDK already present"
+        }
+        
+        # Verify installation
+        if (Test-Path "iPlug2/Dependencies/IPlug/VST3_SDK/base") {
+          Write-Host "✓ VST3_SDK verified - base folder found"
+        } else {
+          Write-Host "✗ VST3_SDK installation failed!"
           exit 1
         }
-        
-        cd ../..
     
     - name: Move project to iPlug2/Examples structure
       run: |
