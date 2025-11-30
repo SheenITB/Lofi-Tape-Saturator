@@ -1,0 +1,87 @@
+name: Build Windows VST3
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout with submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Initialize VST3 SDK in submodule
+      shell: pwsh
+      run: |
+        cd iPlug2/Dependencies/IPlug
+        
+        if (!(Test-Path "VST3_SDK/base")) {
+          Write-Host "Initializing VST3 SDK..."
+          
+          # Remove empty directory if exists
+          if (Test-Path "VST3_SDK") {
+            Remove-Item VST3_SDK -Recurse -Force
+          }
+          
+          # Clone VST3 SDK directly into submodule
+          git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git VST3_SDK
+          
+          Write-Host "✓ VST3 SDK initialized"
+        } else {
+          Write-Host "✓ VST3 SDK already present"
+        }
+        
+        # Verify
+        if (Test-Path "VST3_SDK/base") {
+          Write-Host "✓ Verified: VST3_SDK/base exists"
+        } else {
+          Write-Host "✗ Error: VST3_SDK/base not found"
+          exit 1
+        }
+    
+    - name: Move to Examples structure
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path iPlug2/Examples | Out-Null
+        Move-Item IPlugWebUI iPlug2/Examples/IPlugWebUI -Force
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+    
+    - name: Build VST3 x64
+      shell: pwsh
+      run: |
+        msbuild iPlug2/Examples/IPlugWebUI/IPlugWebUI.sln `
+          /p:Configuration=Release `
+          /p:Platform=x64 `
+          /t:IPlugWebUI-vst3 `
+          /m `
+          /v:minimal
+    
+    - name: Package VST3
+      shell: pwsh
+      run: |
+        $vst3Path = "iPlug2/Examples/IPlugWebUI/build-win/x64/Release/VST3/Lofi Tape Saturator.vst3"
+        
+        if (Test-Path $vst3Path) {
+          New-Item -ItemType Directory -Force -Path artifacts
+          Copy-Item $vst3Path artifacts/ -Recurse
+          Write-Host "✓ VST3 packaged successfully"
+        } else {
+          Write-Host "✗ VST3 not found at expected location"
+          Write-Host "Searching for VST3 files..."
+          Get-ChildItem -Path "iPlug2/Examples/IPlugWebUI/build-win" -Recurse -Filter "*.vst3"
+          exit 1
+        }
+    
+    - name: Upload VST3
+      uses: actions/upload-artifact@v4
+      with:
+        name: LofiTapeSaturator-VST3-Windows-x64
+        path: artifacts/Lofi Tape Saturator.vst3/
+        retention-days: 90
