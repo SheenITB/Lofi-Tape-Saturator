@@ -10,37 +10,27 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - name: Checkout with submodules
+    - name: Checkout
       uses: actions/checkout@v4
       with:
+        fetch-depth: 0
         submodules: recursive
     
-    - name: Initialize VST3 SDK
+    - name: Ensure VST3 SDK is present
       shell: pwsh
       run: |
-        Write-Host "=== Initializing VST3 SDK ==="
-        
-        # The project expects VST3_SDK at: IPlugWebUI/../iPlug2/Dependencies/IPlug/VST3_SDK
-        # Which translates to: iPlug2/Dependencies/IPlug/VST3_SDK
-        
-        $sdkPath = "iPlug2\Dependencies\IPlug\VST3_SDK"
-        
-        # Remove if exists
-        if (Test-Path $sdkPath) {
-          Write-Host "Removing existing VST3_SDK..."
-          Remove-Item $sdkPath -Recurse -Force -ErrorAction SilentlyContinue
-        }
-        
-        # Ensure parent directory exists
-        New-Item -ItemType Directory -Force -Path "iPlug2\Dependencies\IPlug" | Out-Null
-        
-        # Clone VST3 SDK with submodules
-        Write-Host "Cloning VST3 SDK with submodules..."
-        git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git $sdkPath
-        
-        if ($LASTEXITCODE -ne 0) {
-          Write-Host "ERROR: Git clone failed!"
-          exit 1
+        $target = "$env:GITHUB_WORKSPACE\iPlug2\Dependencies\IPlug\VST3_SDK"
+        if (-not (Test-Path $target)) {
+          Write-Host "VST3 SDK not found at $target - cloning vst3sdk..."
+          New-Item -ItemType Directory -Force -Path (Split-Path $target) | Out-Null
+          git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git $target
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "ERROR: Git clone failed!"
+            exit 1
+          }
+        } else {
+          Write-Host "VST3 SDK already present at $target"
         }
         
         # Verify structure
@@ -48,7 +38,7 @@ jobs:
         $requiredDirs = @("base", "public.sdk", "pluginterfaces")
         
         foreach ($dir in $requiredDirs) {
-          $fullPath = Join-Path $sdkPath $dir
+          $fullPath = Join-Path $target $dir
           if (Test-Path $fullPath) {
             Write-Host "✓ $dir"
           } else {
@@ -66,16 +56,23 @@ jobs:
         )
         
         Write-Host "`n=== Verifying key source files ==="
+        $allFilesExist = $true
         foreach ($file in $keyFiles) {
-          $fullPath = Join-Path $sdkPath $file
+          $fullPath = Join-Path $target $file
           if (Test-Path $fullPath) {
             Write-Host "✓ $file"
           } else {
             Write-Host "✗ MISSING: $file"
+            $allFilesExist = $false
           }
         }
         
-        Write-Host "`n✓ VST3 SDK initialized at: $sdkPath"
+        if (-not $allFilesExist) {
+          Write-Host "`nERROR: One or more key source files are missing!"
+          exit 1
+        }
+        
+        Write-Host "`n✓ VST3 SDK initialized at: $target"
     
     - name: Verify project can find VST3 SDK
       shell: pwsh
@@ -112,6 +109,16 @@ jobs:
       run: |
         nuget restore IPlugWebUI\IPlugWebUI.sln
     
+    - name: Build VST3
+      shell: pwsh
+      run: |
+        msbuild IPlugWebUI\IPlugWebUI.sln `
+          /p:Configuration=Release `
+          /p:Platform=x64 `
+          /t:IPlugWebUI-vst3 `
+          /m `
+          /v:minimal
+    
     - name: Package VST3
       shell: pwsh
       run: |
@@ -136,3 +143,10 @@ jobs:
         name: LofiTapeSaturator-VST3-Windows-x64
         path: artifacts/Lofi Tape Saturator.vst3/
         retention-days: 90
+    
+    - name: Debug VST3 SDK path
+      if: failure()
+      shell: cmd
+      run: |
+        echo "Listing SDK contents:"
+        dir /b /s "%GITHUB_WORKSPACE%\iPlug2\Dependencies\IPlug\VST3_SDK"
