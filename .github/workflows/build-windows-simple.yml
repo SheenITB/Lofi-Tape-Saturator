@@ -15,81 +15,91 @@ jobs:
       with:
         submodules: recursive
     
-    - name: Initialize VST3 SDK in submodule
+    - name: Initialize VST3 SDK
       shell: pwsh
       run: |
         Write-Host "=== Initializing VST3 SDK ==="
         
-        # Navigate to Dependencies/IPlug
-        Set-Location iPlug2/Dependencies/IPlug
+        # The project expects VST3_SDK at: IPlugWebUI/../iPlug2/Dependencies/IPlug/VST3_SDK
+        # Which translates to: iPlug2/Dependencies/IPlug/VST3_SDK
         
-        $vst3Path = "VST3_SDK"
+        $sdkPath = "iPlug2\Dependencies\IPlug\VST3_SDK"
         
-        # Always remove and re-clone to ensure fresh SDK
-        if (Test-Path $vst3Path) {
-          Write-Host "Removing existing VST3_SDK directory..."
-          Remove-Item $vst3Path -Recurse -Force -ErrorAction SilentlyContinue
+        # Remove if exists
+        if (Test-Path $sdkPath) {
+          Write-Host "Removing existing VST3_SDK..."
+          Remove-Item $sdkPath -Recurse -Force -ErrorAction SilentlyContinue
         }
         
+        # Ensure parent directory exists
+        New-Item -ItemType Directory -Force -Path "iPlug2\Dependencies\IPlug" | Out-Null
+        
         # Clone VST3 SDK
-        Write-Host "Cloning VST3 SDK from Steinberg GitHub..."
-        git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git $vst3Path
+        Write-Host "Cloning VST3 SDK..."
+        git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git $sdkPath
         
         if ($LASTEXITCODE -ne 0) {
           Write-Host "ERROR: Git clone failed!"
           exit 1
         }
         
-        Write-Host "✓ VST3 SDK cloned successfully"
+        # Verify structure
+        Write-Host "`n=== Verifying VST3 SDK structure ==="
+        $requiredDirs = @("base", "public.sdk", "pluginterfaces", "base\source")
         
-        # Verify critical directories exist
-        $requiredDirs = @(
-          "$vst3Path/base",
-          "$vst3Path/public.sdk",
-          "$vst3Path/pluginterfaces"
-        )
-        
-        $allExist = $true
         foreach ($dir in $requiredDirs) {
-          if (Test-Path $dir) {
-            Write-Host "✓ Found: $dir"
+          $fullPath = Join-Path $sdkPath $dir
+          if (Test-Path $fullPath) {
+            Write-Host "✓ $dir"
           } else {
             Write-Host "✗ MISSING: $dir"
-            $allExist = $false
+            exit 1
           }
         }
         
-        if (!$allExist) {
-          Write-Host "ERROR: VST3 SDK structure incomplete!"
-          Write-Host "Contents of VST3_SDK:"
-          Get-ChildItem $vst3Path | Select-Object Name
-          exit 1
-        }
-        
-        # List some key source files to verify
-        Write-Host "`n=== Verifying key source files ==="
+        # Verify key source files
         $keyFiles = @(
-          "$vst3Path/base/source/baseiids.cpp",
-          "$vst3Path/pluginterfaces/base/funknown.cpp",
-          "$vst3Path/public.sdk/source/vst/vstaudioeffect.cpp"
+          "base\source\baseiids.cpp",
+          "base\source\fdebug.cpp",
+          "pluginterfaces\base\funknown.cpp",
+          "public.sdk\source\vst\vstaudioeffect.cpp"
         )
         
+        Write-Host "`n=== Verifying key source files ==="
         foreach ($file in $keyFiles) {
-          if (Test-Path $file) {
+          $fullPath = Join-Path $sdkPath $file
+          if (Test-Path $fullPath) {
             Write-Host "✓ $file"
           } else {
             Write-Host "✗ MISSING: $file"
           }
         }
         
-        Write-Host "`n✓ VST3 SDK initialization complete"
-        Set-Location ../../..
+        Write-Host "`n✓ VST3 SDK initialized at: $sdkPath"
     
-    - name: Move to Examples structure
+    - name: Verify project can find VST3 SDK
       shell: pwsh
       run: |
-        New-Item -ItemType Directory -Force -Path iPlug2/Examples | Out-Null
-        Move-Item IPlugWebUI iPlug2/Examples/IPlugWebUI -Force
+        Write-Host "=== Testing VST3 SDK path from project directory ==="
+        
+        # From IPlugWebUI/projects/ the path should be ../../../iPlug2/Dependencies/IPlug/VST3_SDK
+        Set-Location "IPlugWebUI\projects"
+        
+        $relPath = "..\..\..\iPlug2\Dependencies\IPlug\VST3_SDK"
+        $absPath = Resolve-Path $relPath -ErrorAction SilentlyContinue
+        
+        if ($absPath -and (Test-Path "$relPath\base")) {
+          Write-Host "✓ VST3 SDK accessible from project: $absPath"
+        } else {
+          Write-Host "✗ ERROR: VST3 SDK NOT accessible from project directory"
+          Write-Host "Expected path: $relPath"
+          Write-Host "Current location: $(Get-Location)"
+          Write-Host "`nDirectory structure:"
+          Get-ChildItem ..\..\.. | Select-Object Name
+          exit 1
+        }
+        
+        Set-Location ..\..
     
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3
@@ -100,31 +110,23 @@ jobs:
     - name: Restore NuGet Packages
       shell: pwsh
       run: |
-        nuget restore iPlug2/Examples/IPlugWebUI/IPlugWebUI.sln
-    
-    - name: Build VST3 x64
-      shell: pwsh
-      run: |
-        msbuild iPlug2/Examples/IPlugWebUI/IPlugWebUI.sln `
-          /p:Configuration=Release `
-          /p:Platform=x64 `
-          /t:IPlugWebUI-vst3 `
-          /m `
-          /v:minimal
+        nuget restore IPlugWebUI\IPlugWebUI.sln
     
     - name: Package VST3
       shell: pwsh
       run: |
-        $vst3Path = "iPlug2/Examples/IPlugWebUI/build-win/x64/Release/VST3/Lofi Tape Saturator.vst3"
+        $vst3Path = "IPlugWebUI\build-win\x64\Release\VST3\Lofi Tape Saturator.vst3"
         
         if (Test-Path $vst3Path) {
           New-Item -ItemType Directory -Force -Path artifacts
-          Copy-Item $vst3Path artifacts/ -Recurse
+          Copy-Item $vst3Path artifacts\ -Recurse
           Write-Host "✓ VST3 packaged successfully"
         } else {
-          Write-Host "✗ VST3 not found at expected location"
+          Write-Host "✗ VST3 not found at expected location: $vst3Path"
           Write-Host "Searching for VST3 files..."
-          Get-ChildItem -Path "iPlug2/Examples/IPlugWebUI/build-win" -Recurse -Filter "*.vst3"
+          Get-ChildItem -Path "IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -ErrorAction SilentlyContinue
+          Write-Host "`nBuild directory structure:"
+          Get-ChildItem IPlugWebUI\build-win -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
           exit 1
         }
     
