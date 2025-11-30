@@ -23,28 +23,42 @@ jobs:
         submodules: 'recursive'
         fetch-depth: 1
     
+    - name: Ensure Dependencies/IPlug directory exists
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path Dependencies\IPlug
+
+    - name: Download VST3 SDK
+      shell: pwsh
+      run: |
+        if (-not (Test-Path Dependencies\IPlug\VST3_SDK)) {
+          git clone --depth 1 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git Dependencies\IPlug\VST3_SDK
+        } else {
+          Write-Host "VST3_SDK already present"
+        }
+
     - name: Initialize VST3 SDK
       run: |
         # Check if VST3_SDK is properly initialized
         $vst3Path = "iPlug2/Dependencies/IPlug/VST3_SDK"
         $needsClone = $true
         
-        if (Test-Path "$vst3Path/base") {
+        if (Test-Path "$vst3Path/base/source/fdebug.cpp") {
           Write-Host "✓ VST3_SDK already properly initialized"
           $needsClone = $false
         } elseif (Test-Path $vst3Path) {
-          Write-Host "VST3_SDK directory exists but is empty, removing..."
+          Write-Host "VST3_SDK directory exists but submodules not initialized, removing..."
           Remove-Item $vst3Path -Recurse -Force
         }
         
         if ($needsClone) {
-          Write-Host "Cloning VST3 SDK from GitHub..."
+          Write-Host "Cloning VST3 SDK from GitHub with submodules..."
           
           # Ensure parent directory exists
           New-Item -ItemType Directory -Force -Path "iPlug2/Dependencies/IPlug" | Out-Null
           
-          # Clone VST3 SDK
-          git clone --depth 1 --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git temp_vst3
+          # Clone VST3 SDK with submodules initialized
+          git clone --depth 1 --recurse-submodules --branch v3.7.7_build_19 https://github.com/steinbergmedia/vst3sdk.git temp_vst3
           
           # Move to correct location
           Move-Item "temp_vst3" $vst3Path -Force
@@ -52,14 +66,16 @@ jobs:
           Write-Host "✓ VST3_SDK cloned successfully"
         }
         
-        # Final verification
-        if (Test-Path "$vst3Path/base") {
-          Write-Host "✓ VST3_SDK verified - base folder found"
+        # Final verification - check for actual source files, not just directories
+        if (Test-Path "$vst3Path/base/source/fdebug.cpp") {
+          Write-Host "✓ VST3_SDK verified - base source files found"
           Get-ChildItem $vst3Path | Select-Object Name | Format-Table -HideTableHeaders
         } else {
-          Write-Host "✗ VST3_SDK installation failed!"
-          Write-Host "Contents of iPlug2/Dependencies/IPlug:"
-          Get-ChildItem "iPlug2/Dependencies/IPlug" -ErrorAction SilentlyContinue
+          Write-Host "✗ VST3_SDK installation failed - submodules may not be initialized!"
+          Write-Host "Contents of VST3_SDK:"
+          Get-ChildItem $vst3Path -ErrorAction SilentlyContinue
+          Write-Host "Contents of VST3_SDK/base:"
+          Get-ChildItem "$vst3Path/base" -ErrorAction SilentlyContinue
           exit 1
         }
     
