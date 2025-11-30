@@ -278,7 +278,7 @@ void IPlugWebUI::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
   const double lpAlpha = std::exp(-twoPi * lowpassHz / sampleRate);
   const double lpComp = 1.0 - lpAlpha;
   const int bits = std::clamp(mMpcBits, 1, 16);
-  const double bitLevels = static_cast<double>(1 << (bits - 1));
+  // bitLevels removed - was unused
   const double bitTransientGain = 3.0 + (16 - bits) * 0.45;
   const double bitTransientMix = 0.015 + (16 - bits) * 0.02;
   const double resampleRatio = std::clamp(mResampleRatio, 0.25, 4.0);
@@ -655,9 +655,12 @@ bool IPlugWebUI::OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pD
     Resize(1024, 768);
   else if (msgTag == kMsgTagBinaryTest)
   {
-    auto uint8Data = reinterpret_cast<const uint8_t*>(pData);
+    // Use the data parameter to avoid warning
+    (void)pData;
     DBGMSG("Data Size %i bytes\n",  dataSize);
-    DBGMSG("Byte values: %i, %i, %i, %i\n", uint8Data[0], uint8Data[1], uint8Data[2], uint8Data[3]);
+    // Byte inspection code commented out - enable if needed for debugging
+    // auto uint8Data = reinterpret_cast<const uint8_t*>(pData);
+    // DBGMSG("Byte values: %i, %i, %i, %i\n", uint8Data[0], uint8Data[1], uint8Data[2], uint8Data[3]);
   }
 
   return false;
