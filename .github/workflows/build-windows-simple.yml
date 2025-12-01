@@ -141,8 +141,6 @@ jobs:
         Set-Location ..\..\..\..
     
     - name: Setup MSBuild
-    
-    - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3
     
     - name: Setup NuGet
