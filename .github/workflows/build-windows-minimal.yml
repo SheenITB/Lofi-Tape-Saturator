@@ -31,8 +31,24 @@ jobs:
       
     - name: Move to Examples
       run: |
-        New-Item -ItemType Directory -Path "iPlug2\Examples" -Force
+        Write-Host "Preparing Examples directory..."
+        
+        # Remove old IPlugWebUI example if it exists
+        if (Test-Path "iPlug2\Examples\IPlugWebUI") {
+          Write-Host "Removing old IPlugWebUI example..."
+          Remove-Item "iPlug2\Examples\IPlugWebUI" -Recurse -Force
+        }
+        
+        if (-not (Test-Path "iPlug2\Examples")) {
+          New-Item -ItemType Directory -Path "iPlug2\Examples" -Force
+        }
+        
+        Write-Host "Moving our IPlugWebUI to Examples..."
         Move-Item "IPlugWebUI" "iPlug2\Examples\IPlugWebUI" -Force
+        
+        # Verify plugin name in config.h
+        $plugName = Select-String -Path "iPlug2\Examples\IPlugWebUI\config.h" -Pattern 'PLUG_NAME "(.+)"' | ForEach-Object { $_.Matches.Groups[1].Value }
+        Write-Host "Plugin name in config.h: $plugName"
       shell: pwsh
     
     - name: Setup MSBuild
