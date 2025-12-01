@@ -15,7 +15,11 @@ jobs:
     
     - name: Clone VST3 SDK
       run: |
+        if (Test-Path "iPlug2\Dependencies\IPlug\VST3_SDK") {
+          Remove-Item "iPlug2\Dependencies\IPlug\VST3_SDK" -Recurse -Force
+        }
         git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git iPlug2/Dependencies/IPlug/VST3_SDK
+      shell: pwsh
       
     - name: Move to Examples
       run: |
