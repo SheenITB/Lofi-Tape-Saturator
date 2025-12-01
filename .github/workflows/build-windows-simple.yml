@@ -79,13 +79,15 @@ jobs:
       run: |
         Write-Host "=== Building VST3 x64 Release ==="
         
-        # Set IPLUG2_ROOT environment variable
-        $env:IPLUG2_ROOT = Resolve-Path "iPlug2"
-        Write-Host "IPLUG2_ROOT: $env:IPLUG2_ROOT"
+        # Get absolute path to iPlug2
+        $iplug2Root = Resolve-Path "iPlug2"
+        Write-Host "IPLUG2_ROOT: $iplug2Root"
         
+        # Pass IPLUG2_ROOT as MSBuild property
         msbuild iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln `
           /p:Configuration=Release `
           /p:Platform=x64 `
+          /p:IPLUG2_ROOT="$iplug2Root" `
           /t:IPlugWebUI-vst3 `
           /m `
           /v:minimal
