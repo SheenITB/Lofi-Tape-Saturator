@@ -28,6 +28,25 @@ jobs:
           exit 1
         }
     
+    - name: Move IPlugWebUI to Examples
+      shell: pwsh
+      run: |
+        Write-Host "=== Moving IPlugWebUI to iPlug2/Examples/ ==="
+        
+        # The vcxproj expects to be in iPlug2/Examples/IPlugWebUI/
+        if (-not (Test-Path "iPlug2\Examples")) {
+          New-Item -ItemType Directory -Path "iPlug2\Examples" | Out-Null
+        }
+        
+        Move-Item "IPlugWebUI" "iPlug2\Examples\IPlugWebUI" -Force
+        
+        if (Test-Path "iPlug2\Examples\IPlugWebUI\IPlugWebUI.cpp") {
+          Write-Host "✓ IPlugWebUI moved successfully"
+        } else {
+          Write-Host "✗ ERROR: Move failed"
+          exit 1
+        }
+    
     - name: Initialize VST3 SDK
       shell: pwsh
       run: |
@@ -95,11 +114,11 @@ jobs:
       run: |
         Write-Host "=== Testing VST3 SDK path from project directory ==="
         
-        # From IPlugWebUI/projects/ the correct path is ../../iPlug2/Dependencies/IPlug/VST3_SDK
-        # Because: projects/ -> IPlugWebUI/ -> repo_root/ -> iPlug2/
-        Set-Location "IPlugWebUI\projects"
+        # Now we're in iPlug2/Examples/IPlugWebUI/projects/
+        # Path to VST3 SDK should be ../../../../Dependencies/IPlug/VST3_SDK
+        Set-Location "iPlug2\Examples\IPlugWebUI\projects"
         
-        $relPath = "..\..\iPlug2\Dependencies\IPlug\VST3_SDK"
+        $relPath = "..\..\..\..\Dependencies\IPlug\VST3_SDK"
         
         Write-Host "Current location: $(Get-Location)"
         Write-Host "Testing path: $relPath"
@@ -108,7 +127,6 @@ jobs:
           $absPath = Resolve-Path $relPath
           Write-Host "✓ VST3 SDK accessible from project: $absPath"
           
-          # Verify base directory exists
           if (Test-Path "$relPath\base") {
             Write-Host "✓ base/ directory found"
           } else {
@@ -117,14 +135,12 @@ jobs:
           }
         } else {
           Write-Host "✗ ERROR: VST3 SDK NOT accessible from project directory"
-          Write-Host "`nDirectory listing from current location:"
-          Get-ChildItem ..\.. | Select-Object Name
-          Write-Host "`nSearching for iPlug2:"
-          Get-ChildItem ..\..\iPlug2 -ErrorAction SilentlyContinue | Select-Object Name
           exit 1
         }
         
-        Set-Location ..\..
+        Set-Location ..\..\..\..
+    
+    - name: Setup MSBuild
     
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3
@@ -135,13 +151,13 @@ jobs:
     - name: Restore NuGet Packages
       shell: pwsh
       run: |
-        nuget restore IPlugWebUI\IPlugWebUI.sln
+        nuget restore iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln
     
     - name: Build VST3 x64
       shell: pwsh
       run: |
         Write-Host "=== Building VST3 x64 Release ==="
-        msbuild IPlugWebUI\IPlugWebUI.sln `
+        msbuild iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln `
           /p:Configuration=Release `
           /p:Platform=x64 `
           /t:IPlugWebUI-vst3 `
@@ -158,7 +174,7 @@ jobs:
     - name: Package VST3
       shell: pwsh
       run: |
-        $vst3Path = "IPlugWebUI\build-win\x64\Release\VST3\Lofi Tape Saturator.vst3"
+        $vst3Path = "iPlug2\Examples\IPlugWebUI\build-win\x64\Release\VST3\Lofi Tape Saturator.vst3"
         
         if (Test-Path $vst3Path) {
           New-Item -ItemType Directory -Force -Path artifacts
@@ -167,9 +183,9 @@ jobs:
         } else {
           Write-Host "✗ VST3 not found at expected location: $vst3Path"
           Write-Host "Searching for VST3 files..."
-          Get-ChildItem -Path "IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -ErrorAction SilentlyContinue
+          Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -ErrorAction SilentlyContinue
           Write-Host "`nBuild directory structure:"
-          Get-ChildItem IPlugWebUI\build-win -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+          Get-ChildItem iPlug2\Examples\IPlugWebUI\build-win -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
           exit 1
         }
     
