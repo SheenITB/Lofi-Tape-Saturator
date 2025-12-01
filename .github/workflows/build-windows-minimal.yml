@@ -62,6 +62,10 @@ jobs:
     
     - name: Build
       run: |
+        # Set IPLUG2_ROOT to correct path (3 levels up from projects/)
+        $env:IPLUG2_ROOT = Resolve-Path "iPlug2"
+        Write-Host "IPLUG2_ROOT set to: $env:IPLUG2_ROOT"
+        
         msbuild iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln /p:Configuration=Release /p:Platform=x64 /t:IPlugWebUI-vst3 /v:detailed
       shell: pwsh
     
