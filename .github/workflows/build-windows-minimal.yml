@@ -15,12 +15,18 @@ jobs:
     
     - name: Clone VST3 SDK
       run: |
-        if (Test-Path "iPlug2\Dependencies\IPlug\VST3_SDK") {
-          Write-Host "Removing existing VST3_SDK..."
-          Remove-Item "iPlug2\Dependencies\IPlug\VST3_SDK" -Recurse -Force
-        }
+        Write-Host "Removing any existing VST3_SDK..."
+        Remove-Item -Path "iPlug2\Dependencies\IPlug\VST3_SDK" -Recurse -Force -ErrorAction SilentlyContinue
+        
         Write-Host "Cloning VST3 SDK..."
         git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git "iPlug2\Dependencies\IPlug\VST3_SDK"
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "Clone failed! Listing directory contents:"
+          Get-ChildItem "iPlug2\Dependencies\IPlug" -ErrorAction SilentlyContinue
+          exit 1
+        }
+        Write-Host "VST3 SDK cloned successfully"
       shell: pwsh
       
     - name: Move to Examples
