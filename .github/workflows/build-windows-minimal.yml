@@ -1,0 +1,59 @@
+name: Build Windows VST3 (Minimal)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Clone VST3 SDK
+      run: |
+        git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git iPlug2/Dependencies/IPlug/VST3_SDK
+      
+    - name: Move to Examples
+      run: |
+        New-Item -ItemType Directory -Path "iPlug2\Examples" -Force
+        Move-Item "IPlugWebUI" "iPlug2\Examples\IPlugWebUI" -Force
+      shell: pwsh
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+    
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v1
+    
+    - name: Restore NuGet
+      run: nuget restore iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln
+    
+    - name: Build
+      run: |
+        msbuild iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln /p:Configuration=Release /p:Platform=x64 /t:IPlugWebUI-vst3 /v:detailed
+      shell: pwsh
+    
+    - name: Find and Upload VST3
+      run: |
+        Write-Host "Searching for VST3..."
+        $vst3 = Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
+        if ($vst3) {
+          Write-Host "Found: $($vst3.FullName)"
+          New-Item -ItemType Directory -Path "artifact" -Force
+          Copy-Item $vst3.FullName "artifact\" -Recurse
+        } else {
+          Write-Host "VST3 not found!"
+          Get-ChildItem "iPlug2\Examples\IPlugWebUI\build-win" -Recurse
+          exit 1
+        }
+      shell: pwsh
+    
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: LofiTape-VST3-Windows
+        path: artifact/
