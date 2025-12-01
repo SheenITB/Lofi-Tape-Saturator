@@ -8,17 +8,68 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Debug: list repo root and iPlug2 contents
+      shell: pwsh
+      run: |
+        Write-Host "Workspace root: $env:GITHUB_WORKSPACE"
+        Write-Host "List repo root:"
+        Get-ChildItem -Force $env:GITHUB_WORKSPACE | Select-Object Name,Mode
+        Write-Host "`nList iPlug2 (if present):"
+        $iplug2 = Join-Path $env:GITHUB_WORKSPACE 'iPlug2'
+        if (Test-Path $iplug2) {
+          Get-ChildItem -Force $iplug2 | Select-Object Name,Mode
+        } else {
+          Write-Host "iPlug2 not checked out"
+        }
+        Write-Host "`nList iPlug2\Dependencies (if present):"
+        $deps = Join-Path $iplug2 'Dependencies'
+        if (Test-Path $deps) {
+          Get-ChildItem -Force $deps | Select-Object Name,Mode
+        } else {
+          Write-Host "iPlug2\Dependencies not present"
+        }
+
+    - name: Ensure VST3 SDK present in iPlug2/Dependencies/IPlug/VST3_SDK
+      shell: pwsh
+      run: |
+        $target = Join-Path $env:GITHUB_WORKSPACE 'iPlug2\Dependencies\IPlug\VST3_SDK'
+        Write-Host "VST3 SDK target path: $target"
+        if (-Not (Test-Path $target)) {
+          Write-Host "Cloning VST3 SDK to $target ..."
+          # Create parent directory just in case
+          $parent = Join-Path $env:GITHUB_WORKSPACE 'iPlug2\Dependencies\IPlug'
+          if (-Not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+          $attempt = 0
+          while ($attempt -lt 3 -and -Not (Test-Path $target)) {
+            $attempt++
+            Write-Host "Clone attempt $attempt ..."
+            git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git $target
+            if ($LASTEXITCODE -eq 0) { break }
+            Start-Sleep -Seconds (5 * $attempt)
+          }
+          if (-Not (Test-Path $target)) { Write-Error "Git clone failed after $attempt attempts"; exit 1 }
+        } else {
+          Write-Host "VST3 SDK already present"
+        }
+        if (-Not (Test-Path (Join-Path $target 'base'))) {
+          Write-Error "VST3 SDK missing 'base' directory after clone"
+          exit 1
+        }
+
     - name: Initialize submodules
       shell: pwsh
       run: |
         Write-Host "=== Initializing iPlug2 submodule ==="
         git submodule update --init --recursive
-        
+
         if (Test-Path "iPlug2\IPlug\VST3\IPlugVST3_ProcessorBase.cpp") {
           Write-Host "✓ iPlug2 submodule initialized correctly"
         } else {
@@ -27,58 +78,58 @@ jobs:
           Get-ChildItem iPlug2 -ErrorAction SilentlyContinue | Select-Object Name
           exit 1
         }
-    
+
     - name: Move IPlugWebUI to Examples
       shell: pwsh
       run: |
         Write-Host "=== Moving IPlugWebUI to iPlug2/Examples/ ==="
-        
+
         # The vcxproj expects to be in iPlug2/Examples/IPlugWebUI/
         if (-not (Test-Path "iPlug2\Examples")) {
           New-Item -ItemType Directory -Path "iPlug2\Examples" | Out-Null
         }
-        
+
         Move-Item "IPlugWebUI" "iPlug2\Examples\IPlugWebUI" -Force
-        
+
         if (Test-Path "iPlug2\Examples\IPlugWebUI\IPlugWebUI.cpp") {
           Write-Host "✓ IPlugWebUI moved successfully"
         } else {
           Write-Host "✗ ERROR: Move failed"
           exit 1
         }
-    
+
     - name: Initialize VST3 SDK
       shell: pwsh
       run: |
         Write-Host "=== Initializing VST3 SDK ==="
-        
+
         # The project expects VST3_SDK at: IPlugWebUI/../iPlug2/Dependencies/IPlug/VST3_SDK
         # Which translates to: iPlug2/Dependencies/IPlug/VST3_SDK
-        
+
         $sdkPath = "iPlug2\Dependencies\IPlug\VST3_SDK"
-        
+
         # Remove if exists
         if (Test-Path $sdkPath) {
           Write-Host "Removing existing VST3_SDK..."
           Remove-Item $sdkPath -Recurse -Force -ErrorAction SilentlyContinue
         }
-        
+
         # Ensure parent directory exists
         New-Item -ItemType Directory -Force -Path "iPlug2\Dependencies\IPlug" | Out-Null
-        
+
         # Clone VST3 SDK with submodules
         Write-Host "Cloning VST3 SDK with submodules..."
         git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git $sdkPath
-        
+
         if ($LASTEXITCODE -ne 0) {
           Write-Host "ERROR: Git clone failed!"
           exit 1
         }
-        
+
         # Verify structure
         Write-Host "`n=== Verifying VST3 SDK structure ==="
         $requiredDirs = @("base", "public.sdk", "pluginterfaces")
-        
+
         foreach ($dir in $requiredDirs) {
           $fullPath = Join-Path $sdkPath $dir
           if (Test-Path $fullPath) {
@@ -88,7 +139,7 @@ jobs:
             exit 1
           }
         }
-        
+
         # Verify key source files
         $keyFiles = @(
           "base\source\baseiids.cpp",
@@ -96,7 +147,7 @@ jobs:
           "pluginterfaces\base\funknown.cpp",
           "public.sdk\source\vst\vstaudioeffect.cpp"
         )
-        
+
         Write-Host "`n=== Verifying key source files ==="
         foreach ($file in $keyFiles) {
           $fullPath = Join-Path $sdkPath $file
@@ -106,51 +157,48 @@ jobs:
             Write-Host "✗ MISSING: $file"
           }
         }
-        
+
         Write-Host "`n✓ VST3 SDK initialized at: $sdkPath"
-    
+
     - name: Verify project can find VST3 SDK
       shell: pwsh
       run: |
         Write-Host "=== Testing VST3 SDK path from project directory ==="
-        
-        # Now we're in iPlug2/Examples/IPlugWebUI/projects/
-        # Path to VST3 SDK should be ../../../../Dependencies/IPlug/VST3_SDK
-        Set-Location "iPlug2\Examples\IPlugWebUI\projects"
-        
-        $relPath = "..\..\..\..\Dependencies\IPlug\VST3_SDK"
-        
-        Write-Host "Current location: $(Get-Location)"
-        Write-Host "Testing path: $relPath"
-        
-        if (Test-Path $relPath) {
-          $absPath = Resolve-Path $relPath
-          Write-Host "✓ VST3 SDK accessible from project: $absPath"
-          
-          if (Test-Path "$relPath\base") {
+
+        $workspace = $env:GITHUB_WORKSPACE
+        Write-Host "Workspace: $workspace"
+        $expected = Join-Path $workspace 'iPlug2\Dependencies\IPlug\VST3_SDK'
+        Write-Host "Expected SDK path: $expected"
+        if (Test-Path $expected) {
+          Write-Host "✓ VST3 SDK present at expected path"
+          if (Test-Path (Join-Path $expected 'base')) {
             Write-Host "✓ base/ directory found"
           } else {
-            Write-Host "✗ base/ directory missing"
+            Write-Host "✗ base/ directory missing under $expected"
             exit 1
           }
         } else {
-          Write-Host "✗ ERROR: VST3 SDK NOT accessible from project directory"
+          Write-Host "✗ VST3 SDK missing at expected path: $expected"
+          Write-Host "Listing workspace root:"
+          Get-ChildItem -Force $workspace | Select-Object Name,Mode
+          Write-Host "`nListing iPlug2 (if present):"
+          if (Test-Path (Join-Path $workspace 'iPlug2')) { Get-ChildItem -Force (Join-Path $workspace 'iPlug2') | Select-Object Name,Mode } else { Write-Host "iPlug2 not present" }
           exit 1
         }
-        
+
         Set-Location ..\..\..\..
-    
+
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3
-    
+
     - name: Setup NuGet
       uses: nuget/setup-nuget@v1
-    
+
     - name: Restore NuGet Packages
       shell: pwsh
       run: |
         nuget restore iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln
-    
+
     - name: Build VST3 x64
       shell: pwsh
       run: |
@@ -161,19 +209,19 @@ jobs:
           /t:IPlugWebUI-vst3 `
           /m `
           /v:minimal
-        
+
         if ($LASTEXITCODE -ne 0) {
           Write-Host "ERROR: Build failed!"
           exit 1
         }
-        
+
         Write-Host "✓ Build completed successfully"
-    
+
     - name: Package VST3
       shell: pwsh
       run: |
         $vst3Path = "iPlug2\Examples\IPlugWebUI\build-win\x64\Release\VST3\Lofi Tape Saturator.vst3"
-        
+
         if (Test-Path $vst3Path) {
           New-Item -ItemType Directory -Force -Path artifacts
           Copy-Item $vst3Path artifacts\ -Recurse
@@ -186,7 +234,7 @@ jobs:
           Get-ChildItem iPlug2\Examples\IPlugWebUI\build-win -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
           exit 1
         }
-    
+
     - name: Upload VST3
       uses: actions/upload-artifact@v4
       with:
