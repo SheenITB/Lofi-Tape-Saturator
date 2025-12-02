@@ -107,6 +107,19 @@ jobs:
         
         if ($vst3) {
           Write-Host "✓ Found: $($vst3.FullName)"
+          
+          # Copy web resources into VST3 bundle
+          $webResources = "iPlug2\Examples\IPlugWebUI\resources\web"
+          if (Test-Path $webResources) {
+            Write-Host "Copying web resources..."
+            $destPath = Join-Path $vst3.FullName "Contents\Resources\web"
+            New-Item -ItemType Directory -Path $destPath -Force | Out-Null
+            Copy-Item "$webResources\*" $destPath -Recurse -Force
+            Write-Host "✓ Web resources copied"
+          } else {
+            Write-Host "⚠ Warning: Web resources not found at $webResources"
+          }
+          
           New-Item -ItemType Directory -Path "artifacts" -Force
           Copy-Item $vst3.FullName "artifacts\" -Recurse
           
