@@ -12,7 +12,37 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: "Debug: list repo root and iPlug2 contents"
+      shell: pwsh
+      run: |
+        Write-Host "Workspace root: $env:GITHUB_WORKSPACE"
+        Write-Host "List repo root:"
+        Get-ChildItem -Force $env:GITHUB_WORKSPACE | Select-Object Name,Mode
+        Write-Host "`nList iPlug2 (if present):"
+        $iplug2 = Join-Path $env:GITHUB_WORKSPACE 'iPlug2'
+        if (Test-Path $iplug2) { Get-ChildItem -Force $iplug2 | Select-Object Name,Mode } else { Write-Host "iPlug2 not checked out" }
+        Write-Host "`nList iPlug2\Dependencies (if present):"
+        $deps = Join-Path $iplug2 'Dependencies'
+        if (Test-Path $deps) { Get-ChildItem -Force $deps | Select-Object Name,Mode } else { Write-Host "iPlug2\Dependencies not present" }
+
+    - name: Ensure VST3 SDK present in iPlug2/Dependencies/IPlug/VST3_SDK
+      shell: pwsh
+      run: |
+        $target = Join-Path $env:GITHUB_WORKSPACE 'iPlug2\Dependencies\IPlug\VST3_SDK'
+        Write-Host "VST3 SDK target path: $target"
+        if (-Not (Test-Path $target)) {
+          Write-Host "Cloning VST3 SDK to $target ..."
+          git clone --depth 1 --branch v3.7.7_build_19 --recurse-submodules https://github.com/steinbergmedia/vst3sdk.git $target
+          if ($LASTEXITCODE -ne 0) { Write-Error "Git clone failed"; exit 1 }
+        } else {
+          Write-Host "VST3 SDK already present"
+        }
+        if (-Not (Test-Path (Join-Path $target 'base'))) { Write-Error "VST3 SDK missing 'base' directory after clone"; exit 1 }
+
     - name: Initialize submodules
       shell: pwsh
       run: |
