@@ -112,15 +112,25 @@ jobs:
           exit 1
         }
         
-        Write-Host "VST3 bundle: $($vst3.FullName)"
+        Write-Host "Original VST3: $($vst3.FullName)"
+        
+        # Rename to correct plugin name
+        $correctName = "Lofi Tape Saturator.vst3"
+        $parentDir = $vst3.Parent.FullName
+        $newPath = Join-Path $parentDir $correctName
+        
+        if ($vst3.Name -ne $correctName) {
+          Write-Host "Renaming VST3 to: $correctName"
+          Move-Item $vst3.FullName $newPath -Force
+          $vst3 = Get-Item $newPath
+          Write-Host "✓ Renamed successfully"
+        }
         
         # Source web resources
         $webSource = "iPlug2\Examples\IPlugWebUI\resources\web"
         
         if (-not (Test-Path $webSource)) {
           Write-Host "✗ ERROR: Web resources not found at: $webSource"
-          Write-Host "Looking for resources folder..."
-          Get-ChildItem "iPlug2\Examples\IPlugWebUI\resources" -ErrorAction SilentlyContinue | Select-Object Name
           exit 1
         }
         
@@ -134,8 +144,7 @@ jobs:
         Copy-Item "$webSource\*" $webDest -Recurse -Force
         
         Write-Host "`n✓ Web resources copied successfully"
-        Write-Host "Contents:"
-        Get-ChildItem $webDest -Recurse | Select-Object FullName
+        Write-Host "Final VST3: $($vst3.FullName)"
     
     - name: Package VST3
       shell: pwsh
