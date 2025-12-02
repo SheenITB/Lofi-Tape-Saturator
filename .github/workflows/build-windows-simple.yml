@@ -99,35 +99,57 @@ jobs:
         
         Write-Host "✓ Build completed successfully"
     
+    - name: Copy Web Resources
+      shell: pwsh
+      run: |
+        Write-Host "=== Copying Web Resources into VST3 ==="
+        
+        # Find the built VST3 bundle
+        $vst3 = Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
+        
+        if (-not $vst3) {
+          Write-Host "✗ VST3 bundle not found!"
+          exit 1
+        }
+        
+        Write-Host "VST3 bundle: $($vst3.FullName)"
+        
+        # Source web resources
+        $webSource = "iPlug2\Examples\IPlugWebUI\resources\web"
+        
+        if (-not (Test-Path $webSource)) {
+          Write-Host "✗ ERROR: Web resources not found at: $webSource"
+          Write-Host "Looking for resources folder..."
+          Get-ChildItem "iPlug2\Examples\IPlugWebUI\resources" -ErrorAction SilentlyContinue | Select-Object Name
+          exit 1
+        }
+        
+        # Destination inside VST3 bundle
+        $webDest = Join-Path $vst3.FullName "Contents\Resources\web"
+        
+        Write-Host "Creating Resources directory..."
+        New-Item -ItemType Directory -Path $webDest -Force | Out-Null
+        
+        Write-Host "Copying web files..."
+        Copy-Item "$webSource\*" $webDest -Recurse -Force
+        
+        Write-Host "`n✓ Web resources copied successfully"
+        Write-Host "Contents:"
+        Get-ChildItem $webDest -Recurse | Select-Object FullName
+    
     - name: Package VST3
       shell: pwsh
       run: |
-        Write-Host "Searching for VST3..."
+        Write-Host "=== Packaging VST3 ==="
         $vst3 = Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
         
         if ($vst3) {
-          Write-Host "✓ Found: $($vst3.FullName)"
-          
-          # Copy web resources into VST3 bundle
-          $webResources = "iPlug2\Examples\IPlugWebUI\resources\web"
-          if (Test-Path $webResources) {
-            Write-Host "Copying web resources..."
-            $destPath = Join-Path $vst3.FullName "Contents\Resources\web"
-            New-Item -ItemType Directory -Path $destPath -Force | Out-Null
-            Copy-Item "$webResources\*" $destPath -Recurse -Force
-            Write-Host "✓ Web resources copied"
-          } else {
-            Write-Host "⚠ Warning: Web resources not found at $webResources"
-          }
-          
-          New-Item -ItemType Directory -Path "artifacts" -Force
+          Write-Host "✓ Found VST3: $($vst3.Name)"
+          New-Item -ItemType Directory -Path "artifacts" -Force | Out-Null
           Copy-Item $vst3.FullName "artifacts\" -Recurse
-          
-          $finalName = (Get-ChildItem "artifacts\*.vst3").Name
-          Write-Host "✓ Packaged: $finalName"
+          Write-Host "✓ Packaged successfully"
         } else {
           Write-Host "✗ VST3 not found!"
-          Get-ChildItem "iPlug2\Examples\IPlugWebUI\build-win" -Recurse
           exit 1
         }
     
