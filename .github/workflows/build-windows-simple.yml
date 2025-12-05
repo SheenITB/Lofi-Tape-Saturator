@@ -88,7 +88,7 @@ jobs:
           /p:Configuration=Release `
           /p:Platform=x64 `
           /p:IPLUG2_ROOT="$iplug2Root" `
-          /t:IPlugWebUI-vst3 `
+          /t:LofiTapeSaturator-vst3 `
           /m `
           /v:minimal
         
