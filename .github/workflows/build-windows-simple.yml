@@ -99,6 +99,31 @@ jobs:
         
         Write-Host "✓ Build completed successfully"
     
+    - name: Rename VST3 Bundle
+      shell: pwsh
+      run: |
+        Write-Host "=== Renaming VST3 Bundle ==="
+        
+        # Find the built VST3 bundle
+        $vst3 = Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
+        
+        if (-not $vst3) {
+          Write-Host "✗ VST3 bundle not found!"
+          exit 1
+        }
+        
+        Write-Host "Found VST3: $($vst3.Name)"
+        
+        $correctName = "Lofi Tape Saturator.vst3"
+        if ($vst3.Name -ne $correctName) {
+          $newPath = Join-Path $vst3.Parent.FullName $correctName
+          Write-Host "Renaming to: $correctName"
+          Move-Item $vst3.FullName $newPath -Force
+          Write-Host "✓ Renamed successfully"
+        } else {
+          Write-Host "✓ Name already correct"
+        }
+    
     - name: Copy Web Resources
       shell: pwsh
       run: |
