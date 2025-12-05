@@ -105,6 +105,9 @@ jobs:
         Write-Host "=== Copying Web Resources into VST3 ==="
         
         # Find the built VST3 bundle
+        Write-Host "Searching for VST3 bundle in build-win..."
+        Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse | Where-Object { $_.PSIsContainer } | ForEach-Object { Write-Host "  Found: $($_.FullName)" }
+        
         $vst3 = Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
         
         if (-not $vst3) {
@@ -113,6 +116,7 @@ jobs:
         }
         
         Write-Host "VST3 bundle: $($vst3.Name)"
+        Write-Host "VST3 path: $($vst3.FullName)"
         
         # Source web resources
         $webSource = "iPlug2\Examples\IPlugWebUI\resources\web"
@@ -122,16 +126,21 @@ jobs:
           exit 1
         }
         
+        Write-Host "Web source contains:"
+        Get-ChildItem $webSource -Recurse | ForEach-Object { Write-Host "  $($_.FullName)" }
+        
         # Destination inside VST3 bundle
         $webDest = Join-Path $vst3.FullName "Contents\Resources\web"
         
-        Write-Host "Creating Resources directory..."
+        Write-Host "Creating Resources directory at: $webDest"
         New-Item -ItemType Directory -Path $webDest -Force | Out-Null
         
         Write-Host "Copying web files..."
         Copy-Item "$webSource\*" $webDest -Recurse -Force
         
         Write-Host "`n✓ Web resources copied successfully"
+        Write-Host "Final structure:"
+        Get-ChildItem $vst3.FullName -Recurse | ForEach-Object { Write-Host "  $($_.FullName)" }
     
     - name: Package VST3
       shell: pwsh
