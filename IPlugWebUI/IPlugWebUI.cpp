@@ -495,9 +495,12 @@ void IPlugWebUI::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
       }
 
       // Apply output gain and smooth bypass crossfade
-      const double wetSignal = clipped * mOutputGainLinear;
+      const double wetSignal = clipped;
       const double drySignal = inputSample;
-      const double finalOutput = drySignal * (1.0 - mBypassRamp) + wetSignal * mBypassRamp;
+      const double mixedOutput = drySignal * (1.0 - mBypassRamp) + wetSignal * mBypassRamp;
+      
+      // Apply output gain to final mixed signal
+      const double finalOutput = mixedOutput * mOutputGainLinear;
 
       outputs[c][s] = static_cast<sample>(finalOutput);
 
