@@ -72,7 +72,7 @@ jobs:
     - name: Restore NuGet Packages
       shell: pwsh
       run: |
-        nuget restore iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln
+        nuget restore "iPlug2\Examples\IPlugWebUI\Lofi Tape Saturator.sln"
     
     - name: Build VST3 x64
       shell: pwsh
@@ -84,7 +84,7 @@ jobs:
         Write-Host "IPLUG2_ROOT: $iplug2Root"
         
         # Pass IPLUG2_ROOT as MSBuild property
-        msbuild iPlug2\Examples\IPlugWebUI\IPlugWebUI.sln `
+        msbuild "iPlug2\Examples\IPlugWebUI\Lofi Tape Saturator.sln" `
           /p:Configuration=Release `
           /p:Platform=x64 `
           /p:IPLUG2_ROOT="$iplug2Root" `
