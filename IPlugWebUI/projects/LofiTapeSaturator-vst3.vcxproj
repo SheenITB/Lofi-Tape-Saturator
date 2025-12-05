@@ -29,8 +29,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{079FC65A-F0E5-4E97-B318-A16D1D0B89DF}</ProjectGuid>
-    <RootNamespace>IPlugWebUI</RootNamespace>
-    <ProjectName>IPlugWebUI-vst3</ProjectName>
+    <RootNamespace>LofiTapeSaturator</RootNamespace>
+    <ProjectName>LofiTapeSaturator-vst3</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

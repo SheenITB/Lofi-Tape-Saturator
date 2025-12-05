@@ -99,10 +99,10 @@ jobs:
         
         Write-Host "✓ Build completed successfully"
     
-    - name: Rename VST3 Bundle
+    - name: Rename VST3 Bundle and Clean macOS Files
       shell: pwsh
       run: |
-        Write-Host "=== Renaming VST3 Bundle ==="
+        Write-Host "=== Cleaning and Renaming VST3 Bundle ==="
         
         # Find the built VST3 bundle
         $vst3 = Get-ChildItem -Path "iPlug2\Examples\IPlugWebUI\build-win" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
@@ -113,6 +113,11 @@ jobs:
         }
         
         Write-Host "Found VST3: $($vst3.Name)"
+        
+        # Remove macOS metadata files (._* files)
+        Write-Host "Removing macOS metadata files..."
+        Get-ChildItem -Path $vst3.FullName -Recurse -Force -Filter "._*" | Remove-Item -Force
+        Get-ChildItem -Path $vst3.FullName -Recurse -Force -Filter ".DS_Store" | Remove-Item -Force
         
         $correctName = "Lofi Tape Saturator.vst3"
         if ($vst3.Name -ne $correctName) {
