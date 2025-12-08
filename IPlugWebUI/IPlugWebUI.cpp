@@ -217,22 +217,34 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
   {
 #if defined OS_WIN && !defined _DEBUG
     // Windows Release: get DLL path and construct full path to index.html
-    WDL_String htmlPath;
-    HostPath(htmlPath);  // Get full path to the DLL
+    WDL_String dllPath;
+    HostPath(dllPath);  // Get full path to the DLL
+    
+    // Show original DLL path for debugging
+    WDL_String debugMsg;
+    debugMsg.Set("DLL Path: ");
+    debugMsg.Append(dllPath.Get());
+    MessageBox(NULL, debugMsg.Get(), "Debug 1", MB_OK);
     
     // Remove the DLL filename to get to x86_64-win folder
-    htmlPath.remove_filepart();
+    dllPath.remove_filepart();
+    debugMsg.Set("After remove 1: ");
+    debugMsg.Append(dllPath.Get());
+    MessageBox(NULL, debugMsg.Get(), "Debug 2", MB_OK);
     
     // Go up to Contents folder
-    htmlPath.remove_filepart();
+    dllPath.remove_filepart();
+    debugMsg.Set("After remove 2: ");
+    debugMsg.Append(dllPath.Get());
+    MessageBox(NULL, debugMsg.Get(), "Debug 3", MB_OK);
     
     // Append path to HTML file
-    htmlPath.Append("/Resources/web/index.html");
+    dllPath.Append("/Resources/web/index.html");
     
     // Convert to file:/// URI for WebView2
     WDL_String fileUri;
     fileUri.Set("file:///");
-    fileUri.Append(htmlPath.Get());
+    fileUri.Append(dllPath.Get());
     
     // Replace backslashes with forward slashes
     char* p = fileUri.Get();
@@ -240,6 +252,10 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
       if (*p == '\\') *p = '/';
       p++;
     }
+    
+    debugMsg.Set("Final URI: ");
+    debugMsg.Append(fileUri.Get());
+    MessageBox(NULL, debugMsg.Get(), "Debug 4", MB_OK);
     
     LoadURL(fileUri.Get());
 #else
