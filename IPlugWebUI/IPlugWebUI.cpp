@@ -215,7 +215,36 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
   
   mEditorInitFunc = [&]()
   {
+#if defined OS_WIN && !defined _DEBUG
+    // Windows Release: get DLL path and construct full path to index.html
+    WDL_String htmlPath;
+    HostPath(htmlPath);  // Get full path to the DLL
+    
+    // Remove the DLL filename to get to x86_64-win folder
+    htmlPath.remove_filepart();
+    
+    // Go up to Contents folder
+    htmlPath.remove_filepart();
+    
+    // Append path to HTML file
+    htmlPath.Append("/Resources/web/index.html");
+    
+    // Convert to file:/// URI for WebView2
+    WDL_String fileUri;
+    fileUri.Set("file:///");
+    fileUri.Append(htmlPath.Get());
+    
+    // Replace backslashes with forward slashes
+    char* p = fileUri.Get();
+    while (*p) {
+      if (*p == '\\') *p = '/';
+      p++;
+    }
+    
+    LoadURL(fileUri.Get());
+#else
     LoadIndexHtml(__FILE__, GetBundleID());
+#endif
     EnableScroll(false);
   };
 
