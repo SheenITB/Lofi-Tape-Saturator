@@ -205,6 +205,25 @@ jobs:
           Write-Host "✓ Icon file found"
         }
     
+    - name: Download WebView2 Bootstrapper
+      shell: pwsh
+      run: |
+        Write-Host "=== Downloading WebView2 Bootstrapper ==="
+        
+        $webView2Url = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
+        $webView2Path = "installer\windows\MicrosoftEdgeWebview2Setup.exe"
+        
+        Write-Host "Downloading WebView2 Runtime Bootstrapper..."
+        Invoke-WebRequest -Uri $webView2Url -OutFile $webView2Path
+        
+        if (Test-Path $webView2Path) {
+          $size = (Get-Item $webView2Path).Length / 1MB
+          Write-Host "✓ Downloaded successfully ($([math]::Round($size, 2)) MB)"
+        } else {
+          Write-Host "✗ Download failed!"
+          exit 1
+        }
+    
     - name: Install Inno Setup
       shell: pwsh
       run: |
