@@ -220,23 +220,11 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     WDL_String dllPath;
     HostPath(dllPath);  // Get full path to the DLL
     
-    // Show original DLL path for debugging
-    WDL_String debugMsg;
-    debugMsg.Set("DLL Path: ");
-    debugMsg.Append(dllPath.Get());
-    MessageBoxA(NULL, debugMsg.Get(), "Debug 1", MB_OK);
-    
     // Remove the DLL filename to get to x86_64-win folder
     dllPath.remove_filepart();
-    debugMsg.Set("After remove 1: ");
-    debugMsg.Append(dllPath.Get());
-    MessageBoxA(NULL, debugMsg.Get(), "Debug 2", MB_OK);
     
     // Go up to Contents folder
     dllPath.remove_filepart();
-    debugMsg.Set("After remove 2: ");
-    debugMsg.Append(dllPath.Get());
-    MessageBoxA(NULL, debugMsg.Get(), "Debug 3", MB_OK);
     
     // Append path to HTML file
     dllPath.Append("/Resources/web/index.html");
@@ -252,10 +240,6 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
       if (*p == '\\') *p = '/';
       p++;
     }
-    
-    debugMsg.Set("Final URI: ");
-    debugMsg.Append(fileUri.Get());
-    MessageBoxA(NULL, debugMsg.Get(), "Debug 4", MB_OK);
     
     LoadURL(fileUri.Get());
 #else
