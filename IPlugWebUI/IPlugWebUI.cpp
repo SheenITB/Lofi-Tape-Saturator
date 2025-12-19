@@ -216,17 +216,23 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
   mEditorInitFunc = [&]()
   {
 #if defined OS_WIN && !defined _DEBUG
-    // Windows Release: get DLL path and construct full path to index.html
+    // Windows Release: Get the actual DLL path using GetModuleFileName
+    char modulePath[MAX_PATH];
+    HMODULE hModule = NULL;
+    
+    // Get handle to this DLL
+    GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
+                       GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                       (LPCSTR)&IPlugWebUI::IPlugWebUI,
+                       &hModule);
+    
+    // Get full path to the DLL
+    GetModuleFileNameA(hModule, modulePath, MAX_PATH);
+    
     WDL_String dllPath;
-    HostPath(dllPath);  // Get full path to the DLL
+    dllPath.Set(modulePath);
     
-    // Debug: show original path
-    WDL_String debugMsg;
-    debugMsg.Set("Original HostPath():\n");
-    debugMsg.Append(dllPath.Get());
-    MessageBoxA(NULL, debugMsg.Get(), "DEBUG - Original Path", MB_OK);
-    
-    // Find the .vst3 bundle root by searching backwards for ".vst3"
+    // Find the .vst3 bundle root by searching for ".vst3"
     const char* vst3Pos = strstr(dllPath.Get(), ".vst3");
     if (vst3Pos) {
       // Truncate at .vst3 and include it
@@ -235,10 +241,6 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
       
       // Now append the path to web resources
       dllPath.Append("\\Contents\\Resources\\web\\index.html");
-      
-      debugMsg.Set("Final path to index.html:\n");
-      debugMsg.Append(dllPath.Get());
-      MessageBoxA(NULL, debugMsg.Get(), "DEBUG - Final Path", MB_OK);
       
       // Check if file exists
       FILE* testFile = fopen(dllPath.Get(), "r");
@@ -259,7 +261,7 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
         
         LoadURL(fileUri.Get());
       } else {
-        // Fallback: show error message with actual path
+        // Show error with path
         WDL_String errorMsg;
         errorMsg.Set("Cannot find web resources at:\n");
         errorMsg.Append(dllPath.Get());
@@ -267,9 +269,10 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
         MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
       }
     } else {
-      debugMsg.Set("Cannot find .vst3 in path:\n");
-      debugMsg.Append(dllPath.Get());
-      MessageBoxA(NULL, debugMsg.Get(), "DEBUG - No .vst3 Found", MB_OK | MB_ICONERROR);
+      WDL_String errorMsg;
+      errorMsg.Set("Cannot find .vst3 in module path:\n");
+      errorMsg.Append(dllPath.Get());
+      MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
     }
 #else
     LoadIndexHtml(__FILE__, GetBundleID());
