@@ -229,13 +229,6 @@ jobs:
           Write-Host "✗ Inno Setup installation failed!"
           exit 1
         }
-        
-        # Download and install Inno Download Plugin for WebView2 download
-        Write-Host "Installing Inno Download Plugin..."
-        $idpUrl = "https://raw.githubusercontent.com/DomGries/InnoDependencyInstaller/master/scripts/idp.iss"
-        $idpPath = "$innoPath\idp.iss"
-        Invoke-WebRequest -Uri $idpUrl -OutFile $idpPath
-        Write-Host "✓ Inno Download Plugin installed"
     
     
     - name: Build Installer

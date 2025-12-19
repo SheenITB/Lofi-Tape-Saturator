@@ -2,15 +2,11 @@
 ; This installer will automatically install the plugin in the correct locations for FL Studio and other DAWs
 ; Includes automatic WebView2 Runtime installation
 
-; Include Inno Download Plugin for WebView2 download
-#include "idp.iss"
-
 #define MyAppName "Lofi Tape Saturator"
 #define MyAppVersion "1.0.9"
 #define MyAppPublisher "itbblog"
 #define MyAppURL "https://www.itbblog.com"
 #define VST3FileName "Lofi Tape Saturator.vst3"
-#define WebView2InstallerURL "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
 
 [Setup]
 AppId={{4C544653-6174-7572-6174-6F7200000001}
@@ -59,6 +55,9 @@ var
 
 function IsWebView2Installed: Boolean;
 var
+
+function IsWebView2Installed: Boolean;
+var
   RegKey: String;
   Version: String;
 begin
@@ -70,67 +69,7 @@ begin
   begin
     // Try 32-bit key on 64-bit system
     RegKey := 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
-    Result := RegQueryStringValue(HKLM, RegKey, 'pv', Version);
-  end;
-end;
-
-function DownloadAndInstallWebView2: Boolean;
-var
-  WebView2Installer: String;
-  ResultCode: Integer;
-begin
-  Result := True;
-  WebView2Installer := ExpandConstant('{tmp}\MicrosoftEdgeWebview2Setup.exe');
-  
-  if not IsWebView2Installed then
-  begin
-    if MsgBox('This plugin requires Microsoft Edge WebView2 Runtime.' + #13#10#13#10 +
-              'Would you like to download and install it now?' + #13#10 +
-              '(Required for the plugin to work)', mbConfirmation, MB_YESNO) = IDYES then
-    begin
-      // Download WebView2 bootstrapper
-      if idpDownloadFile('{#WebView2InstallerURL}', WebView2Installer) then
-      begin
-        // Install WebView2
-        if Exec(WebView2Installer, '/silent /install', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-        begin
-          if ResultCode = 0 then
-          begin
-            WebView2Installed := True;
-            Result := True;
-          end
-          else
-          begin
-            MsgBox('WebView2 installation failed. The plugin may not work correctly.' + #13#10 +
-                   'You can manually install it from: https://go.microsoft.com/fwlink/p/?LinkId=2124703',
-                   mbError, MB_OK);
-            Result := False;
-          end;
-        end;
-      end
-      else
-      begin
-        MsgBox('Failed to download WebView2. Please check your internet connection.' + #13#10 +
-               'You can manually install it from: https://go.microsoft.com/fwlink/p/?LinkId=2124703',
-               mbError, MB_OK);
-        Result := False;
-      end;
-    end
-    else
-    begin
-      MsgBox('WebView2 Runtime is required for this plugin to work.' + #13#10 +
-             'Please install it manually from: https://go.microsoft.com/fwlink/p/?LinkId=2124703',
-             mbInformation, MB_OK);
-      Result := False;
-    end;
-  end
-  else
-  begin
-    WebView2Installed := True;
-  end;
-end;
-
-function FLStudioExists: Boolean;
+    Result := RegQueryStringValue(HKLM, RegKey, 'pv', Version)ean;
 var
   FLDir: String;
 begin
@@ -182,3 +121,26 @@ begin
     MsgBox(Message, mbInformation, MB_OK);
   end;
 end;
+
+  if not IsWin64 then
+  begin
+    MsgBox('This plugin requires a 64-bit version of Windows.', mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  
+  // Check WebView2 and inform user
+  if not IsWebView2Installed then
+  begin
+    MsgBox('This plugin requires Microsoft Edge WebView2 Runtime.' + #13#10#13#10 +
+           'Please install it from:' + #13#10 +
+           'https://go.microsoft.com/fwlink/p/?LinkId=2124703' + #13#10#13#10 +
+           'The installer will continue, but the plugin will not work until WebView2 is installed.',
+           mbInformation, MB_OK);
+  end
+  else
+  begin
+    WebView2Installednot WebView2Installed then
+    begin
+      Message := Message + 'IMPORTANT: WebView2 Runtime is required!' + #13#10 +
+                 'Download from: https://go.microsoft.com/fwlink/p/?LinkId=2124703
