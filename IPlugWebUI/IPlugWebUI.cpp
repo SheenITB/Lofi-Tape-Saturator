@@ -180,8 +180,7 @@ void BiquadFilter::SetLowPass(double sampleRate, double freq, double resonance)
 }
 
 IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
-: WebViewEditorDelegate(kNumParams)
-, Plugin(info, MakeConfig(kNumParams, kNumPresets))
+: Plugin(info, MakeConfig(kNumParams, kNumPresets))
 {
   GetParam(kParamDriveGain)->InitDouble("DriveGain", 0.2, 0.0, 1.0, 0.001, "");
   GetParam(kParamDriveVU)->InitDouble("DriveVU", 0.0, 0.0, 1.0, 0.001, "", IParam::kFlagCannotAutomate);
@@ -216,73 +215,7 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
   
   mEditorInitFunc = [&]()
   {
-#if defined OS_WIN && !defined _DEBUG
-    // Windows Release: Get the actual DLL path using GetModuleFileName
-    char modulePath[MAX_PATH];
-    HMODULE hModule = NULL;
-    
-    // Use a dummy static variable to get the address within this DLL
-    static int dummyVar;
-    
-    // Get handle to this DLL
-    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
-                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                           (LPCSTR)&dummyVar,
-                           &hModule) && hModule != NULL)
-    {
-      // Get full path to the DLL
-      GetModuleFileNameA(hModule, modulePath, MAX_PATH);
-      
-      WDL_String dllPath;
-      dllPath.Set(modulePath);
-      
-      // Find the .vst3 bundle root by searching for ".vst3"
-      const char* vst3Pos = strstr(dllPath.Get(), ".vst3");
-      if (vst3Pos) {
-        // Truncate at .vst3 and include it
-        int vst3Index = (int)(vst3Pos - dllPath.Get()) + 5; // +5 for ".vst3"
-        dllPath.Set(dllPath.Get(), vst3Index);
-        
-        // Now append the path to web resources
-        dllPath.Append("\\Contents\\Resources\\web\\index.html");
-        
-        // Check if file exists
-        FILE* testFile = fopen(dllPath.Get(), "r");
-        if (testFile) {
-          fclose(testFile);
-          
-          // Convert to file:/// URI for WebView2
-          WDL_String fileUri;
-          fileUri.Set("file:///");
-          fileUri.Append(dllPath.Get());
-          
-          // Replace backslashes with forward slashes
-          char* p = fileUri.Get();
-          while (*p) {
-            if (*p == '\\') *p = '/';
-            p++;
-          }
-          
-          LoadURL(fileUri.Get());
-        } else {
-          // Show error with path
-          WDL_String errorMsg;
-          errorMsg.Set("FILE NOT FOUND at:\n");
-          errorMsg.Append(dllPath.Get());
-          MessageBoxA(NULL, errorMsg.Get(), "ERROR", MB_OK | MB_ICONERROR);
-        }
-      } else {
-        WDL_String errorMsg;
-        errorMsg.Set("Cannot find .vst3 in module path:\n");
-        errorMsg.Append(dllPath.Get());
-        MessageBoxA(NULL, errorMsg.Get(), "ERROR", MB_OK | MB_ICONERROR);
-      }
-    } else {
-      MessageBoxA(NULL, "Failed to get module handle", "ERROR", MB_OK | MB_ICONERROR);
-    }
-#else
     LoadIndexHtml(__FILE__, GetBundleID());
-#endif
     EnableScroll(false);
   };
 
