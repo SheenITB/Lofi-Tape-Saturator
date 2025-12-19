@@ -229,19 +229,32 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     // Append path to HTML file
     dllPath.Append("/Resources/web/index.html");
     
-    // Convert to file:/// URI for WebView2
-    WDL_String fileUri;
-    fileUri.Set("file:///");
-    fileUri.Append(dllPath.Get());
-    
-    // Replace backslashes with forward slashes
-    char* p = fileUri.Get();
-    while (*p) {
-      if (*p == '\\') *p = '/';
-      p++;
+    // Check if file exists
+    FILE* testFile = fopen(dllPath.Get(), "r");
+    if (testFile) {
+      fclose(testFile);
+      
+      // Convert to file:/// URI for WebView2
+      WDL_String fileUri;
+      fileUri.Set("file:///");
+      fileUri.Append(dllPath.Get());
+      
+      // Replace backslashes with forward slashes
+      char* p = fileUri.Get();
+      while (*p) {
+        if (*p == '\\') *p = '/';
+        p++;
+      }
+      
+      LoadURL(fileUri.Get());
+    } else {
+      // Fallback: show error message
+      WDL_String errorMsg;
+      errorMsg.Set("Cannot find web resources at:\n");
+      errorMsg.Append(dllPath.Get());
+      errorMsg.Append("\n\nPlease reinstall the plugin.");
+      MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
     }
-    
-    LoadURL(fileUri.Get());
 #else
     LoadIndexHtml(__FILE__, GetBundleID());
 #endif
