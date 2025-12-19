@@ -188,6 +188,20 @@ jobs:
           exit 1
         }
     
+    - name: Download VST3 PluginTestHost
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/steinbergmedia/vst3_pluginterfaces/releases/download/v3.7.7/VST3PluginTestHost_win.zip" `
+                          -OutFile plugintesthost.zip
+        Expand-Archive plugintesthost.zip -DestinationPath testhost
+    
+    - name: Test VST3
+      shell: pwsh
+      run: |
+        .\testhost\plugintesthost.exe `
+          --pluginfolder "artifacts" `
+          --validate
+    
     - name: Upload VST3
       uses: actions/upload-artifact@v4
       with:
