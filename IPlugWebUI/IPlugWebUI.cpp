@@ -224,19 +224,19 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     WDL_String debugMsg;
     debugMsg.Set("DLL Path: ");
     debugMsg.Append(dllPath.Get());
-    MessageBox(NULL, debugMsg.Get(), "Debug 1", MB_OK);
+    MessageBoxA(NULL, debugMsg.Get(), "Debug 1", MB_OK);
     
     // Remove the DLL filename to get to x86_64-win folder
     dllPath.remove_filepart();
     debugMsg.Set("After remove 1: ");
     debugMsg.Append(dllPath.Get());
-    MessageBox(NULL, debugMsg.Get(), "Debug 2", MB_OK);
+    MessageBoxA(NULL, debugMsg.Get(), "Debug 2", MB_OK);
     
     // Go up to Contents folder
     dllPath.remove_filepart();
     debugMsg.Set("After remove 2: ");
     debugMsg.Append(dllPath.Get());
-    MessageBox(NULL, debugMsg.Get(), "Debug 3", MB_OK);
+    MessageBoxA(NULL, debugMsg.Get(), "Debug 3", MB_OK);
     
     // Append path to HTML file
     dllPath.Append("/Resources/web/index.html");
@@ -255,7 +255,7 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     
     debugMsg.Set("Final URI: ");
     debugMsg.Append(fileUri.Get());
-    MessageBox(NULL, debugMsg.Get(), "Debug 4", MB_OK);
+    MessageBoxA(NULL, debugMsg.Get(), "Debug 4", MB_OK);
     
     LoadURL(fileUri.Get());
 #else
