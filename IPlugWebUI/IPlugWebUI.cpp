@@ -220,59 +220,65 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     char modulePath[MAX_PATH];
     HMODULE hModule = NULL;
     
+    // Use a dummy static variable to get the address within this DLL
+    static int dummyVar;
+    
     // Get handle to this DLL
-    GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
-                       GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                       (LPCSTR)&IPlugWebUI::IPlugWebUI,
-                       &hModule);
-    
-    // Get full path to the DLL
-    GetModuleFileNameA(hModule, modulePath, MAX_PATH);
-    
-    WDL_String dllPath;
-    dllPath.Set(modulePath);
-    
-    // Find the .vst3 bundle root by searching for ".vst3"
-    const char* vst3Pos = strstr(dllPath.Get(), ".vst3");
-    if (vst3Pos) {
-      // Truncate at .vst3 and include it
-      int vst3Index = (int)(vst3Pos - dllPath.Get()) + 5; // +5 for ".vst3"
-      dllPath.Set(dllPath.Get(), vst3Index);
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | 
+                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           (LPCSTR)&dummyVar,
+                           &hModule) && hModule != NULL)
+    {
+      // Get full path to the DLL
+      GetModuleFileNameA(hModule, modulePath, MAX_PATH);
       
-      // Now append the path to web resources
-      dllPath.Append("\\Contents\\Resources\\web\\index.html");
+      WDL_String dllPath;
+      dllPath.Set(modulePath);
       
-      // Check if file exists
-      FILE* testFile = fopen(dllPath.Get(), "r");
-      if (testFile) {
-        fclose(testFile);
+      // Find the .vst3 bundle root by searching for ".vst3"
+      const char* vst3Pos = strstr(dllPath.Get(), ".vst3");
+      if (vst3Pos) {
+        // Truncate at .vst3 and include it
+        int vst3Index = (int)(vst3Pos - dllPath.Get()) + 5; // +5 for ".vst3"
+        dllPath.Set(dllPath.Get(), vst3Index);
         
-        // Convert to file:/// URI for WebView2
-        WDL_String fileUri;
-        fileUri.Set("file:///");
-        fileUri.Append(dllPath.Get());
+        // Now append the path to web resources
+        dllPath.Append("\\Contents\\Resources\\web\\index.html");
         
-        // Replace backslashes with forward slashes
-        char* p = fileUri.Get();
-        while (*p) {
-          if (*p == '\\') *p = '/';
-          p++;
+        // Check if file exists
+        FILE* testFile = fopen(dllPath.Get(), "r");
+        if (testFile) {
+          fclose(testFile);
+          
+          // Convert to file:/// URI for WebView2
+          WDL_String fileUri;
+          fileUri.Set("file:///");
+          fileUri.Append(dllPath.Get());
+          
+          // Replace backslashes with forward slashes
+          char* p = fileUri.Get();
+          while (*p) {
+            if (*p == '\\') *p = '/';
+            p++;
+          }
+          
+          LoadURL(fileUri.Get());
+        } else {
+          // Show error with path
+          WDL_String errorMsg;
+          errorMsg.Set("Cannot find web resources at:\n");
+          errorMsg.Append(dllPath.Get());
+          errorMsg.Append("\n\nPlease reinstall the plugin.");
+          MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
         }
-        
-        LoadURL(fileUri.Get());
       } else {
-        // Show error with path
         WDL_String errorMsg;
-        errorMsg.Set("Cannot find web resources at:\n");
+        errorMsg.Set("Cannot find .vst3 in module path:\n");
         errorMsg.Append(dllPath.Get());
-        errorMsg.Append("\n\nPlease reinstall the plugin.");
         MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
       }
     } else {
-      WDL_String errorMsg;
-      errorMsg.Set("Cannot find .vst3 in module path:\n");
-      errorMsg.Append(dllPath.Get());
-      MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
+      MessageBoxA(NULL, "Failed to get module handle", "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
     }
 #else
     LoadIndexHtml(__FILE__, GetBundleID());
