@@ -235,6 +235,12 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
       WDL_String dllPath;
       dllPath.Set(modulePath);
       
+      // DEBUG: Show DLL path
+      WDL_String debugMsg;
+      debugMsg.Set("DLL Path:\n");
+      debugMsg.Append(dllPath.Get());
+      MessageBoxA(NULL, debugMsg.Get(), "DEBUG 1", MB_OK);
+      
       // Find the .vst3 bundle root by searching for ".vst3"
       const char* vst3Pos = strstr(dllPath.Get(), ".vst3");
       if (vst3Pos) {
@@ -245,10 +251,17 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
         // Now append the path to web resources
         dllPath.Append("\\Contents\\Resources\\web\\index.html");
         
+        // DEBUG: Show final path
+        debugMsg.Set("Looking for:\n");
+        debugMsg.Append(dllPath.Get());
+        MessageBoxA(NULL, debugMsg.Get(), "DEBUG 2", MB_OK);
+        
         // Check if file exists
         FILE* testFile = fopen(dllPath.Get(), "r");
         if (testFile) {
           fclose(testFile);
+          
+          MessageBoxA(NULL, "File found! Loading...", "DEBUG 3", MB_OK);
           
           // Convert to file:/// URI for WebView2
           WDL_String fileUri;
@@ -262,23 +275,26 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
             p++;
           }
           
+          debugMsg.Set("Loading URL:\n");
+          debugMsg.Append(fileUri.Get());
+          MessageBoxA(NULL, debugMsg.Get(), "DEBUG 4", MB_OK);
+          
           LoadURL(fileUri.Get());
         } else {
           // Show error with path
           WDL_String errorMsg;
-          errorMsg.Set("Cannot find web resources at:\n");
+          errorMsg.Set("FILE NOT FOUND at:\n");
           errorMsg.Append(dllPath.Get());
-          errorMsg.Append("\n\nPlease reinstall the plugin.");
-          MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
+          MessageBoxA(NULL, errorMsg.Get(), "ERROR", MB_OK | MB_ICONERROR);
         }
       } else {
         WDL_String errorMsg;
         errorMsg.Set("Cannot find .vst3 in module path:\n");
         errorMsg.Append(dllPath.Get());
-        MessageBoxA(NULL, errorMsg.Get(), "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, errorMsg.Get(), "ERROR", MB_OK | MB_ICONERROR);
       }
     } else {
-      MessageBoxA(NULL, "Failed to get module handle", "Lofi Tape Saturator Error", MB_OK | MB_ICONERROR);
+      MessageBoxA(NULL, "Failed to get module handle", "ERROR", MB_OK | MB_ICONERROR);
     }
 #else
     LoadIndexHtml(__FILE__, GetBundleID());
