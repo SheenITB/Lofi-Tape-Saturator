@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IPlug_include_in_plug_hdr.h"
+#include "IPlugWebViewEditorDelegate.h"
 #include "Oscillator.h"
 #include "Smoothers.h"
 #include <atomic>
@@ -69,7 +70,7 @@ enum EMsgTags
   kMsgTagBinaryTest = 3
 };
 
-class IPlugWebUI final : public Plugin
+class IPlugWebUI final : public WebViewEditorDelegate
 {
 public:
   IPlugWebUI(const InstanceInfo& info);

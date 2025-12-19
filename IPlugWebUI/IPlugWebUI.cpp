@@ -180,7 +180,8 @@ void BiquadFilter::SetLowPass(double sampleRate, double freq, double resonance)
 }
 
 IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
-: Plugin(info, MakeConfig(kNumParams, kNumPresets))
+: WebViewEditorDelegate(kNumParams)
+, Plugin(info, MakeConfig(kNumParams, kNumPresets))
 {
   GetParam(kParamDriveGain)->InitDouble("DriveGain", 0.2, 0.0, 1.0, 0.001, "");
   GetParam(kParamDriveVU)->InitDouble("DriveVU", 0.0, 0.0, 1.0, 0.001, "", IParam::kFlagCannotAutomate);
