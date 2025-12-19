@@ -227,22 +227,15 @@ jobs:
     - name: Install Inno Setup
       shell: pwsh
       run: |
-        Write-Host "=== Installing Inno Setup ==="
+        Write-Host "=== Installing Inno Setup via Chocolatey ==="
         
-        # Download Inno Setup
-        $innoUrl = "https://jrsoftware.org/download.php/is.exe"
-        $innoInstaller = "$env:TEMP\innosetup.exe"
+        # Install Inno Setup using chocolatey (pre-installed on GitHub runners)
+        choco install innosetup -y
         
-        Write-Host "Downloading Inno Setup..."
-        Invoke-WebRequest -Uri $innoUrl -OutFile $innoInstaller
-        
-        Write-Host "Installing Inno Setup..."
-        Start-Process -FilePath $innoInstaller -Args "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
-        
-        # Add Inno Setup to PATH
+        # Verify installation
         $innoPath = "C:\Program Files (x86)\Inno Setup 6"
-        if (Test-Path $innoPath) {
-          Write-Host "✓ Inno Setup installed at: $innoPath"
+        if (Test-Path "$innoPath\ISCC.exe") {
+          Write-Host "✓ Inno Setup installed successfully at: $innoPath"
           echo "$innoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         } else {
           Write-Host "✗ Inno Setup installation failed!"
