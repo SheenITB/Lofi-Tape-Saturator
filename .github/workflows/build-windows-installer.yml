@@ -236,7 +236,7 @@ jobs:
         $idpPath = "$innoPath\idp.iss"
         Invoke-WebRequest -Uri $idpUrl -OutFile $idpPath
         Write-Host "✓ Inno Download Plugin installed"
-        }
+    
     
     - name: Build Installer
       shell: pwsh
