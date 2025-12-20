@@ -231,6 +231,9 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     
     // Force a reload to ensure content is properly displayed
     ReloadPageContent();
+    
+    // Ensure WebView is visible
+    HideWebView(false);
   };
 
   for (int i = 0; i < kNumParams; ++i)
