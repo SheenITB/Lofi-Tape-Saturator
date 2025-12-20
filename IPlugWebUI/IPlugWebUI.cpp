@@ -215,7 +215,18 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
   
   mEditorInitFunc = [&]()
   {
+    // Ensure index.html loads correctly on Windows Release builds
+  #if defined OS_WIN
+    WDL_String resPath;
+    BundleResourcePath(resPath, (HMODULE) GetWinModuleHandle());
+    // VST3 bundle resources path ends with "Resources\"
+    WDL_String indexPath;
+    indexPath.Set(resPath.Get());
+    indexPath.Append("web\\index.html");
+    LoadFile(indexPath.Get(), nullptr);
+  #else
     LoadIndexHtml(__FILE__, GetBundleID());
+  #endif
     EnableScroll(false);
   };
 

@@ -188,9 +188,37 @@ jobs:
           exit 1
         }
     
+    - name: Create Manual Install ZIP
+      shell: pwsh
+      run: |
+        Write-Host "=== Creating Manual Install ZIP ==="
+        $version = Select-String -Path "iPlug2\Examples\IPlugWebUI\config.h" -Pattern 'PLUG_VERSION_STR "(.+)"' | ForEach-Object { $_.Matches.Groups[1].Value }
+        if (-not $version) { $version = "latest" }
+
+        $bundleDir = Get-ChildItem -Path "artifacts" -Filter "Lofi Tape Saturator.vst3" -Directory | Select-Object -First 1
+        if (-not $bundleDir) { Write-Host "✗ Bundle not found in artifacts"; exit 1 }
+
+        # Include manual install docs
+        Copy-Item "INSTALLAZIONE-WINDOWS.md" "artifacts\INSTALLAZIONE-WINDOWS.md" -Force
+        Copy-Item "installer\windows\MANUAL-INSTALL-README.txt" "artifacts\MANUAL-INSTALL-README.txt" -Force
+
+        $zipName = "LofiTapeSaturator_v$version_Windows_x64_VST3.zip"
+        $zipPath = Join-Path (Resolve-Path "artifacts").Path $zipName
+        if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+        Write-Host "Compressing to: $zipPath"
+        Compress-Archive -Path "artifacts\Lofi Tape Saturator.vst3","artifacts\INSTALLAZIONE-WINDOWS.md","artifacts\MANUAL-INSTALL-README.txt" -DestinationPath $zipPath
+        Write-Host "✓ ZIP created"
+
     - name: Upload VST3
       uses: actions/upload-artifact@v4
       with:
         name: LofiTapeSaturator-VST3-Windows-x64
         path: artifacts/
+        retention-days: 90
+
+    - name: Upload Manual Install ZIP
+      uses: actions/upload-artifact@v4
+      with:
+        name: LofiTapeSaturator-Manual-Install-ZIP
+        path: artifacts/*.zip
         retention-days: 90
