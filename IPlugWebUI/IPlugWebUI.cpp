@@ -218,7 +218,7 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     // Ensure index.html loads correctly on Windows Release builds
   #if defined OS_WIN
     WDL_String resPath;
-    BundleResourcePath(resPath, (HMODULE) GetWinModuleHandle());
+    BundleResourcePath(resPath, gHINSTANCE);
     // VST3 bundle resources path ends with "Resources\"
     WDL_String indexPath;
     indexPath.Set(resPath.Get());
