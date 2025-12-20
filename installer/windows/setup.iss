@@ -5,7 +5,7 @@
 #ifndef MyAppVersion
   #define MyAppVersion "1.0.9"
 #endif
-#define MyAppPublisher "itbblog"
+#define MyAppPublisher "ITBBLOG"
 #define MyAppURL "https://www.itbblog.com"
 #define VST3FileName "Lofi Tape Saturator.vst3"
 
