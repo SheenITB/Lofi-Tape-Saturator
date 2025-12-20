@@ -223,17 +223,21 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     WDL_String indexPath;
     indexPath.Set(resPath.Get());
     indexPath.Append("web\\index.html");
+    
+    // Try loading with explicit bundle ID for Windows
     LoadFile(indexPath.Get(), nullptr);
+    
+    // Force multiple reloads and visibility updates for Windows
+    ReloadPageContent();
+    HideWebView(false);
+    ReloadPageContent();
+    
+    // Additional JavaScript execution to force DOM update
+    EvaluateJavaScript("document.body.style.display = 'block';", nullptr);
   #else
     LoadIndexHtml(__FILE__, GetBundleID());
   #endif
     EnableScroll(false);
-    
-    // Force a reload to ensure content is properly displayed
-    ReloadPageContent();
-    
-    // Ensure WebView is visible
-    HideWebView(false);
   };
 
   for (int i = 0; i < kNumParams; ++i)
