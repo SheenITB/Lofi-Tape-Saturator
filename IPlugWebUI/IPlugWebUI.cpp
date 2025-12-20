@@ -228,6 +228,9 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     LoadIndexHtml(__FILE__, GetBundleID());
   #endif
     EnableScroll(false);
+    
+    // Force a reload to ensure content is properly displayed
+    ReloadPageContent();
   };
 
   for (int i = 0; i < kNumParams; ++i)
