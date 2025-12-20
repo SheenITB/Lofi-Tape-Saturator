@@ -645,6 +645,13 @@ void IPlugWebUI::OnIdle()
   if (!mUIOpen.load(std::memory_order_acquire))
     return;
 
+  // Periodically trigger responsive layout from C++ side
+  static int sScaleCounter = 0;
+  if ((++sScaleCounter % 60) == 0) // roughly every ~60 idle ticks
+  {
+    EvaluateJavaScript("if(window.applyScale){window.applyScale()}");
+  }
+
   if (!mDriveVUQueued.exchange(false, std::memory_order_acq_rel))
     return;
 
