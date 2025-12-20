@@ -232,12 +232,15 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
     HideWebView(false);
     ReloadPageContent();
     
-    // Additional JavaScript execution to force DOM update
-    EvaluateJavaScript("document.body.style.display = 'block';", nullptr);
+    // Force the UI to be visible by setting root opacity and removing loading overlay
+    EvaluateJavaScript("document.getElementById('root').style.opacity = '1'; document.body.classList.add('scripts-loaded');", nullptr);
+    
+    // Force WebView resize to ensure proper layout
+    SetWebViewBounds(0, 0, 500, 700);
   #else
     LoadIndexHtml(__FILE__, GetBundleID());
   #endif
-    EnableScroll(false);
+    EnableScroll(true);
   };
 
   for (int i = 0; i < kNumParams; ++i)
