@@ -188,37 +188,93 @@ jobs:
           exit 1
         }
     
-    - name: Create Manual Install ZIP
+    - name: Download WebView2 Bootstrapper
       shell: pwsh
       run: |
-        Write-Host "=== Creating Manual Install ZIP ==="
+        Write-Host "=== Downloading WebView2 Bootstrapper ==="
+        $webView2Url = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
+        $webView2Path = "installer\windows\MicrosoftEdgeWebview2Setup.exe"
+        
+        Write-Host "Downloading WebView2 Runtime Bootstrapper..."
+        Invoke-WebRequest -Uri $webView2Url -OutFile $webView2Path
+        
+        if (Test-Path $webView2Path) {
+          $size = (Get-Item $webView2Path).Length / 1MB
+          Write-Host "✓ Downloaded WebView2 Bootstrapper: $size MB"
+        } else {
+          Write-Host "✗ Failed to download WebView2 Bootstrapper"
+          exit 1
+        }
+
+    - name: Setup Inno Setup
+      shell: pwsh
+      run: |
+        Write-Host "=== Setting up Inno Setup ==="
+        $innoUrl = "https://jrsoftware.org/download.php/is.exe"
+        $innoPath = "$env:TEMP\inno-setup.exe"
+        
+        Write-Host "Downloading Inno Setup..."
+        Invoke-WebRequest -Uri $innoUrl -OutFile $innoPath
+        
+        Write-Host "Installing Inno Setup..."
+        Start-Process -FilePath $innoPath -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=C:\InnoSetup" -Wait
+        
+        # Add to PATH
+        $env:PATH += ";C:\InnoSetup"
+        
+        # Verify installation
+        if (Get-Command "ISCC.exe" -ErrorAction SilentlyContinue) {
+          Write-Host "✓ Inno Setup installed successfully"
+          ISCC.exe /? | Select-Object -First 5
+        } else {
+          Write-Host "✗ Inno Setup installation failed"
+          exit 1
+        }
+
+    - name: Build Installer
+      shell: pwsh
+      run: |
+        Write-Host "=== Building Installer ==="
+        
+        # Read version from config.h
         $version = Select-String -Path "iPlug2\Examples\IPlugWebUI\config.h" -Pattern 'PLUG_VERSION_STR "(.+)"' | ForEach-Object { $_.Matches.Groups[1].Value }
-        if (-not $version) { $version = "latest" }
+        if (-not $version) { $version = "1.0.9" }
+        Write-Host "Plugin version: $version"
+        
+        # Create installer output directory
+        New-Item -ItemType Directory -Path "artifacts\installer" -Force | Out-Null
+        
+        # Build the installer with version parameter
+        $issPath = "installer\windows\setup.iss"
+        if (Test-Path $issPath) {
+          Write-Host "Building installer from: $issPath"
+          & "C:\InnoSetup\ISCC.exe" "/DMyAppVersion=$version" $issPath
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Installer built successfully"
+            
+            # List generated files
+            Get-ChildItem "artifacts\installer" -Recurse | ForEach-Object {
+              Write-Host "  Generated: $($_.FullName)"
+            }
+          } else {
+            Write-Host "✗ Installer build failed with exit code: $LASTEXITCODE"
+            exit 1
+          }
+        } else {
+          Write-Host "✗ Inno Setup script not found: $issPath"
+          exit 1
+        }
 
-        $bundleDir = Get-ChildItem -Path "artifacts" -Filter "Lofi Tape Saturator.vst3" -Directory | Select-Object -First 1
-        if (-not $bundleDir) { Write-Host "✗ Bundle not found in artifacts"; exit 1 }
-
-        # Include manual install docs
-        Copy-Item "INSTALLAZIONE-WINDOWS.md" "artifacts\INSTALLAZIONE-WINDOWS.md" -Force
-        Copy-Item "installer\windows\MANUAL-INSTALL-README.txt" "artifacts\MANUAL-INSTALL-README.txt" -Force
-
-        $zipName = "LofiTapeSaturator_v$version_Windows_x64_VST3.zip"
-        $zipPath = Join-Path (Resolve-Path "artifacts").Path $zipName
-        if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-        Write-Host "Compressing to: $zipPath"
-        Compress-Archive -Path "artifacts\Lofi Tape Saturator.vst3","artifacts\INSTALLAZIONE-WINDOWS.md","artifacts\MANUAL-INSTALL-README.txt" -DestinationPath $zipPath
-        Write-Host "✓ ZIP created"
-
-    - name: Upload VST3
+    - name: Upload VST3 Bundle
       uses: actions/upload-artifact@v4
       with:
         name: LofiTapeSaturator-VST3-Windows-x64
-        path: artifacts/
+        path: artifacts/Lofi Tape Saturator.vst3/
         retention-days: 90
 
-    - name: Upload Manual Install ZIP
+    - name: Upload Installer
       uses: actions/upload-artifact@v4
       with:
-        name: LofiTapeSaturator-Manual-Install-ZIP
-        path: artifacts/*.zip
-        retention-days: 90
+        name: LofiTapeSaturator-Installer-Windows-x64
+        path: artifacts/installer/

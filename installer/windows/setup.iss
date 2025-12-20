@@ -2,7 +2,9 @@
 ; This installer will automatically install the plugin and WebView2 Runtime
 
 #define MyAppName "Lofi Tape Saturator"
-#define MyAppVersion "1.0.9"
+#ifndef MyAppVersion
+  #define MyAppVersion "1.0.9"
+#endif
 #define MyAppPublisher "itbblog"
 #define MyAppURL "https://www.itbblog.com"
 #define VST3FileName "Lofi Tape Saturator.vst3"
