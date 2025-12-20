@@ -46,12 +46,48 @@
 
   <body>
     <div id="root"></div>
-    
-    <!-- Mark scripts as loaded -->
+
+    <!-- Responsive scaling to fit host container while preserving aspect ratio -->
     <script>
-      window.addEventListener('DOMContentLoaded', () => {
+      function applyScale() {
+        const getCssPx = (name) => {
+          const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+          return parseFloat(v.replace('px','')) || 0;
+        };
+
+        const designW = getCssPx('--gui-width');
+        const designH = getCssPx('--gui-height');
+        const containerW = window.innerWidth;
+        const containerH = window.innerHeight;
+
+        if (!designW || !designH || !containerW || !containerH) return;
+
+        const scale = Math.min(containerW / designW, containerH / designH);
+        const root = document.getElementById('root');
+
+        // Size root to design pixels and scale to fit container
+        root.style.width = designW + 'px';
+        root.style.height = designH + 'px';
+        root.style.transform = `scale(${scale})`;
+        root.style.transformOrigin = 'top left';
+        root.style.position = 'absolute';
+
+        // Center within container
+        const left = (containerW - designW * scale) / 2;
+        const top = (containerH - designH * scale) / 2;
+        root.style.left = `${Math.max(0, left)}px`;
+        root.style.top = `${Math.max(0, top)}px`;
+
+        // Reveal content and remove loading overlay
+        root.classList.add('loaded');
         document.body.classList.add('scripts-loaded');
-      });
+      }
+
+      window.addEventListener('resize', applyScale);
+      window.addEventListener('DOMContentLoaded', applyScale);
+      // Safety: run again shortly after load in case WebView resizes
+      setTimeout(applyScale, 50);
+      setTimeout(applyScale, 150);
     </script>
   </body>
 </html>
