@@ -246,7 +246,7 @@ void IPlugWebUI::ProcessBlock(sample** inputs, sample** outputs, int nFrames)
   // === SMOOTH POWER/BYPASS ===
   // Smooth ramp to avoid clicks: 0.0 = fully bypassed, 1.0 = fully active
   const double targetRamp = mPowerOn ? 1.0 : 0.0;
-  const double rampSpeed = 0.005; // Adjust for faster/slower fade (higher = faster)
+  const double rampSpeed = 0.02; // Faster response to power toggles
   
   if (std::abs(mBypassRamp - targetRamp) < 0.0001)
   {
@@ -536,7 +536,7 @@ void IPlugWebUI::OnReset()
 {
   auto sr = GetSampleRate();
   mOscillator.SetSampleRate(sr);
-  mDriveSmoother.SetSmoothTime(20., sr);
+  mDriveSmoother.SetSmoothTime(5., sr);
   mDriveSmoother.SetValue(mDriveGain);
   mLastPeak = 0.0f;
   mDriveVUQueued.store(false, std::memory_order_release);
