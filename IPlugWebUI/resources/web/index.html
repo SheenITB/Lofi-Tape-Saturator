@@ -11,6 +11,14 @@
     
     <!-- 🎨 Design System: Inline Critical CSS for FOUC Prevention -->
     <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* avoid scrollbars in host wrappers */
+        background: #1a0d06;
+      }
       /* Prevent Flash of Unstyled Content */
       #root {
         opacity: 0;
@@ -39,6 +47,36 @@
       body.scripts-loaded::before {
         opacity: 0;
       }
+
+      /* Scale selector overlay */
+      .scale-menu {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 6px;
+        z-index: 100000;
+        background: rgba(0,0,0,0.35);
+        padding: 6px 8px;
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        user-select: none;
+      }
+      .scale-menu button {
+        appearance: none;
+        border: 1px solid rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.08);
+        color: #f0e8dc;
+        font: 600 11px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        padding: 6px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .scale-menu button.active {
+        background: rgba(255,255,255,0.18);
+        border-color: rgba(255,255,255,0.5);
+      }
     </style>
     <script type="module" crossorigin src="./assets/index-DDHL9nsD.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-mEI70OEm.css">
@@ -47,8 +85,18 @@
   <body>
     <div id="root"></div>
 
+    <!-- UI Scale selector: 100 / 50 / 25 -->
+    <div class="scale-menu" id="scale-menu" aria-label="UI scale selector">
+      <button data-scale="100">100%</button>
+      <button data-scale="50">50%</button>
+      <button data-scale="25">25%</button>
+    </div>
+
     <!-- Responsive scaling to fit host container while preserving aspect ratio -->
     <script>
+      // Persisted UI scale percentage (default 50)
+      window.uiScalePct = parseInt(localStorage.getItem('uiScalePct') || '50', 10);
+
       function applyScale() {
         const getCssPx = (name) => {
           const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -62,7 +110,10 @@
 
         if (!designW || !designH || !containerW || !containerH) return;
 
-        const scale = Math.min(containerW / designW, containerH / designH);
+        const fitScale = Math.min(containerW / designW, containerH / designH);
+        const userScale = Math.max(0.1, (Number(window.uiScalePct) || 50) / 100);
+        // Final scale cannot exceed the fit-to-container value
+        const scale = Math.max(0.1, Math.min(fitScale, userScale));
         const root = document.getElementById('root');
 
         // Size root to design pixels and scale to fit container
@@ -83,11 +134,48 @@
         document.body.classList.add('scripts-loaded');
       }
 
+      // Public API to set UI scale from host if needed
+      window.setUIScale = function(pct) {
+        const v = Math.max(10, Math.min(400, parseInt(pct, 10) || 50));
+        window.uiScalePct = v;
+        try { localStorage.setItem('uiScalePct', String(v)); } catch {}
+        updateScaleButtons();
+        applyScale();
+      }
+
+      function updateScaleButtons() {
+        const menu = document.getElementById('scale-menu');
+        if (!menu) return;
+        const current = String(window.uiScalePct);
+        menu.querySelectorAll('button').forEach(btn => {
+          const isActive = btn.getAttribute('data-scale') === current;
+          btn.classList.toggle('active', isActive);
+        });
+      }
+
+      function bindScaleButtons() {
+        const menu = document.getElementById('scale-menu');
+        if (!menu) return;
+        menu.addEventListener('click', (ev) => {
+          const btn = ev.target.closest('button[data-scale]');
+          if (!btn) return;
+          const pct = parseInt(btn.getAttribute('data-scale'), 10);
+          window.setUIScale(pct);
+        });
+        // Ensure a default if storage was empty
+        if (!window.uiScalePct) window.uiScalePct = 50;
+        updateScaleButtons();
+      }
+
       window.addEventListener('resize', applyScale);
-      window.addEventListener('DOMContentLoaded', applyScale);
+      window.addEventListener('DOMContentLoaded', () => {
+        bindScaleButtons();
+        applyScale();
+      });
       // Safety: run again shortly after load in case WebView resizes
       setTimeout(applyScale, 50);
       setTimeout(applyScale, 150);
+      setTimeout(applyScale, 350);
     </script>
   </body>
 </html>

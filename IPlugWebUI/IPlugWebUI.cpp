@@ -215,31 +215,18 @@ IPlugWebUI::IPlugWebUI(const InstanceInfo& info)
   
   mEditorInitFunc = [&]()
   {
-    // Ensure index.html loads correctly on Windows Release builds
+    // Load UI (Windows uses explicit path inside bundle; other platforms use helper)
   #if defined OS_WIN
     WDL_String resPath;
     BundleResourcePath(resPath, gHINSTANCE);
-    // VST3 bundle resources path ends with "Resources\"
     WDL_String indexPath;
     indexPath.Set(resPath.Get());
     indexPath.Append("web\\index.html");
-    
-    // Try loading with explicit bundle ID for Windows
     LoadFile(indexPath.Get(), nullptr);
-    
-    // Force multiple reloads and visibility updates for Windows
-    ReloadPageContent();
-    HideWebView(false);
-    ReloadPageContent();
-    
-    // Force the UI to be visible by setting root opacity and removing loading overlay
-    EvaluateJavaScript("document.getElementById('root').style.opacity = '1'; document.body.classList.add('scripts-loaded');", nullptr);
-    
-    // Force WebView resize to ensure proper layout
-    SetWebViewBounds(0, 0, 500, 700);
   #else
     LoadIndexHtml(__FILE__, GetBundleID());
   #endif
+    // Let the WebView fill the editor via WebViewEditorDelegate; avoid manual bounds
     EnableScroll(true);
   };
 
