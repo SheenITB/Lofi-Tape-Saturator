@@ -104,22 +104,18 @@
         const containerH = window.innerHeight;
 
         if (!designW || !designH || !containerW || !containerH) return;
-
-        const scale = 0.5;
         const root = document.getElementById('root');
 
-        // Size root to design pixels and scale to fit container
+        // Size root to design pixels; WebView zoom handles the scale on Windows
         root.style.width = designW + 'px';
         root.style.height = designH + 'px';
-        root.style.transform = `scale(${scale})`;
+        root.style.transform = 'none';
         root.style.transformOrigin = 'top left';
         root.style.position = 'absolute';
 
-        // Center within container
-        const left = (containerW - designW * scale) / 2;
-        const top = (containerH - designH * scale) / 2;
-        root.style.left = `${Math.max(0, left)}px`;
-        root.style.top = `${Math.max(0, top)}px`;
+        // Align to top-left of container
+        root.style.left = `0px`;
+        root.style.top = `0px`;
 
         // Reveal content and remove loading overlay
         root.classList.add('loaded');
