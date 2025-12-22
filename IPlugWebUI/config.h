@@ -24,13 +24,13 @@
 #define PLUG_DOES_MPE 0
 #define PLUG_DOES_STATE_CHUNKS 0
 #define PLUG_HAS_UI 1
-#define PLUG_WIDTH 500
-#define PLUG_HEIGHT 700
+#define PLUG_WIDTH 250
+#define PLUG_HEIGHT 350
 #define PLUG_FPS 60
 #define PLUG_SHARED_RESOURCES 0
 #define PLUG_HOST_RESIZE 1
-#define PLUG_MIN_WIDTH 500
-#define PLUG_MIN_HEIGHT 700
+#define PLUG_MIN_WIDTH 250
+#define PLUG_MIN_HEIGHT 350
 
 // DPI Awareness for Windows high-DPI displays
 #define PLUG_WIN_DPI_AWARE 1

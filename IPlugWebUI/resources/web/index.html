@@ -48,22 +48,7 @@
         opacity: 0;
       }
 
-      /* Top-right UI scale toggle */
-      .ui-scale { position: fixed; top: 10px; right: 10px; z-index: 100000; }
-      .ui-scale-toggle {
-        appearance: none;
-        border: 1px solid rgba(255,255,255,0.25);
-        background: rgba(255,255,255,0.10);
-        color: #f0e8dc;
-        font: 600 13px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        padding: 6px 8px;
-        border-radius: 8px;
-        cursor: pointer;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-      }
-      .ui-scale-toggle:hover { background: rgba(255,255,255,0.16); }
-      .ui-scale-toggle svg { width: 14px; height: 14px; fill: currentColor; vertical-align: middle; }
+      /* (Removed) manual UI scale toggle/menu */
       .ui-scale-menu {
         position: absolute;
         margin-top: 8px;
@@ -100,24 +85,12 @@
     <div id="root"></div>
 
     <!-- Top-right toggle button + dropdown menu for UI scale -->
-    <div class="ui-scale" id="ui-scale">
-      <button class="ui-scale-toggle" id="ui-scale-toggle" aria-label="UI scale" aria-haspopup="true" aria-expanded="false" aria-controls="ui-scale-menu" title="UI scale">
-        <!-- Inline SVG gear icon to avoid missing Unicode glyphs -->
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M9.4 2h5.2l.6 2.3c.4.1.8.3 1.2.5l2.1-1.3 3.7 3.7-1.3 2.1c.2.4.4.8.5 1.2L22 14.6v5.2l-2.3.6c-.1.4-.3.8-.5 1.2l1.3 2.1-3.7 3.7-2.1-1.3c-.4.2-.8.4-1.2.5L14.6 26H9.4l-.6-2.3c-.4-.1-.8-.3-1.2-.5L5.5 24l-3.7-3.7 1.3-2.1c-.2-.4-.4-.8-.5-1.2L0 14.6V9.4l2.3-.6c.1-.4.3-.8.5-1.2L1.5 5.5 5.2 1.8l2.1 1.3c.4-.2.8-.4 1.2-.5L9.4 2Zm2.6 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm0 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/>
-        </svg>
-      </button>
-      <div class="ui-scale-menu" id="ui-scale-menu" role="menu" hidden>
-        <button role="menuitem" data-scale="100">100%</button>
-        <button role="menuitem" data-scale="50">50%</button>
-        <button role="menuitem" data-scale="25">25%</button>
-      </div>
-    </div>
+    <!-- Manual UI scale controls removed: default fixed at 50% -->
 
     <!-- Responsive scaling to fit host container while preserving aspect ratio -->
     <script>
-      // Persisted UI scale percentage (default 25) using v2 key to avoid old 50% values
-      window.uiScalePct = parseInt(localStorage.getItem('uiScalePctV2') || '25', 10);
+      // Fixed scale at 50% (no manual controls)
+      window.uiScalePct = 50;
 
       function applyScale() {
         const getCssPx = (name) => {
@@ -132,10 +105,7 @@
 
         if (!designW || !designH || !containerW || !containerH) return;
 
-        const fitScale = Math.min(containerW / designW, containerH / designH);
-        const userScale = Math.max(0.1, (Number(window.uiScalePct) || 25) / 100);
-        // Final scale cannot exceed the fit-to-container value
-        const scale = Math.max(0.1, Math.min(fitScale, userScale));
+        const scale = 0.5;
         const root = document.getElementById('root');
 
         // Size root to design pixels and scale to fit container
@@ -157,71 +127,14 @@
       }
 
       // Public API to set UI scale from host if needed
-      window.setUIScale = function(pct) {
-        const v = Math.max(10, Math.min(400, parseInt(pct, 10) || 50));
-        window.uiScalePct = v;
-        try { localStorage.setItem('uiScalePctV2', String(v)); } catch {}
-        updateScaleButtons();
-        applyScale();
-      }
+      // No external UI scale API; fixed at 50%
 
-      function updateScaleButtons() {
-        const menu = document.getElementById('ui-scale-menu');
-        if (!menu) return;
-        const current = String(window.uiScalePct);
-        menu.querySelectorAll('button').forEach(btn => {
-          const isActive = btn.getAttribute('data-scale') === current;
-          btn.classList.toggle('active', isActive);
-        });
-      }
+      // (Removed) button state update
 
-      function bindScaleUI() {
-        const toggle = document.getElementById('ui-scale-toggle');
-        const menu = document.getElementById('ui-scale-menu');
-        if (!toggle || !menu) return;
-
-        // Toggle menu visibility
-        toggle.addEventListener('click', () => {
-          const isHidden = menu.hasAttribute('hidden');
-          if (isHidden) {
-            menu.removeAttribute('hidden');
-            toggle.setAttribute('aria-expanded', 'true');
-          } else {
-            menu.setAttribute('hidden', '');
-            toggle.setAttribute('aria-expanded', 'false');
-          }
-        });
-
-        // Close when clicking outside
-        document.addEventListener('click', (ev) => {
-          if (!menu.hasAttribute('hidden')) {
-            const within = ev.target.closest('#ui-scale');
-            if (!within) {
-              menu.setAttribute('hidden', '');
-              toggle.setAttribute('aria-expanded', 'false');
-            }
-          }
-        });
-
-        // Handle selection
-        menu.addEventListener('click', (ev) => {
-          const btn = ev.target.closest('button[data-scale]');
-          if (!btn) return;
-          const pct = parseInt(btn.getAttribute('data-scale'), 10);
-          window.setUIScale(pct);
-          // Hide after selection
-          menu.setAttribute('hidden', '');
-          toggle.setAttribute('aria-expanded', 'false');
-        });
-
-        // Ensure a default if storage was empty
-        if (!window.uiScalePct) window.uiScalePct = 25;
-        updateScaleButtons();
-      }
+      // (Removed) UI binding; fixed scale
 
       window.addEventListener('resize', applyScale);
       window.addEventListener('DOMContentLoaded', () => {
-        bindScaleUI();
         applyScale();
       });
       // Safety: run again shortly after load in case WebView resizes
