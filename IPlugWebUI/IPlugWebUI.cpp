@@ -663,10 +663,8 @@ void IPlugWebUI::OnIdle()
           const double dh = std::abs(h - targetH);
           if (dw > 1.0 || dh > 1.0)
           {
-            const double f = targetW / w; // e.g. if w=125 => f=2 => ask 500x700
-            const int newW = static_cast<int>(std::round(targetW * f));
-            const int newH = static_cast<int>(std::round(targetH * f));
-            Resize(newW, newH);
+            // Keep wrapper at the intended fixed size; avoid oversizing the host
+            Resize(static_cast<int>(targetW), static_cast<int>(targetH));
           }
           else
           {
