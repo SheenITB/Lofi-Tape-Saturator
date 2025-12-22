@@ -16,7 +16,7 @@ You can read more about using WebViews [here](https://github.com/iPlug2/iPlug2/w
 
 ## Manual UI scale (100/50/25)
 
-- A small overlay at top-right lets you pick the UI scale: 100%, 50%, or 25%.
+- A small button in the top-right opens a menu with 100%, 50%, and 25%.
 - Default is 25%; your choice is saved and restored automatically.
 - The manual scale never exceeds the available host window (still auto-fits down if needed).
 - Hosts can set it programmatically via `window.setUIScale(25|50|100)` from the WebView context.

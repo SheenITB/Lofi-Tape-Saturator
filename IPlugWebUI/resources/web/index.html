@@ -48,22 +48,34 @@
         opacity: 0;
       }
 
-      /* Scale selector overlay */
-      .scale-menu {
+      /* Top-right UI scale toggle */
+      .ui-scale { position: absolute; top: 10px; right: 10px; z-index: 100000; }
+      .ui-scale-toggle {
+        appearance: none;
+        border: 1px solid rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.10);
+        color: #f0e8dc;
+        font: 600 11px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        padding: 6px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+      }
+      .ui-scale-menu {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        margin-top: 8px;
+        right: 0;
         display: flex;
         gap: 6px;
-        z-index: 100000;
         background: rgba(0,0,0,0.35);
         padding: 6px 8px;
         border-radius: 8px;
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
-        user-select: none;
       }
-      .scale-menu button {
+      .ui-scale-menu[hidden] { display: none; }
+      .ui-scale-menu button {
         appearance: none;
         border: 1px solid rgba(255,255,255,0.25);
         background: rgba(255,255,255,0.08);
@@ -73,7 +85,7 @@
         border-radius: 6px;
         cursor: pointer;
       }
-      .scale-menu button.active {
+      .ui-scale-menu button.active {
         background: rgba(255,255,255,0.18);
         border-color: rgba(255,255,255,0.5);
       }
@@ -85,11 +97,14 @@
   <body>
     <div id="root"></div>
 
-    <!-- UI Scale selector: 100 / 50 / 25 -->
-    <div class="scale-menu" id="scale-menu" aria-label="UI scale selector">
-      <button data-scale="100">100%</button>
-      <button data-scale="50">50%</button>
-      <button data-scale="25">25%</button>
+    <!-- Top-right toggle button + dropdown menu for UI scale -->
+    <div class="ui-scale" id="ui-scale">
+      <button class="ui-scale-toggle" id="ui-scale-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="ui-scale-menu" title="UI Scale">UI</button>
+      <div class="ui-scale-menu" id="ui-scale-menu" role="menu" hidden>
+        <button role="menuitem" data-scale="100">100%</button>
+        <button role="menuitem" data-scale="50">50%</button>
+        <button role="menuitem" data-scale="25">25%</button>
+      </div>
     </div>
 
     <!-- Responsive scaling to fit host container while preserving aspect ratio -->
@@ -144,7 +159,7 @@
       }
 
       function updateScaleButtons() {
-        const menu = document.getElementById('scale-menu');
+        const menu = document.getElementById('ui-scale-menu');
         if (!menu) return;
         const current = String(window.uiScalePct);
         menu.querySelectorAll('button').forEach(btn => {
@@ -153,15 +168,45 @@
         });
       }
 
-      function bindScaleButtons() {
-        const menu = document.getElementById('scale-menu');
-        if (!menu) return;
+      function bindScaleUI() {
+        const toggle = document.getElementById('ui-scale-toggle');
+        const menu = document.getElementById('ui-scale-menu');
+        if (!toggle || !menu) return;
+
+        // Toggle menu visibility
+        toggle.addEventListener('click', () => {
+          const isHidden = menu.hasAttribute('hidden');
+          if (isHidden) {
+            menu.removeAttribute('hidden');
+            toggle.setAttribute('aria-expanded', 'true');
+          } else {
+            menu.setAttribute('hidden', '');
+            toggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (ev) => {
+          if (!menu.hasAttribute('hidden')) {
+            const within = ev.target.closest('#ui-scale');
+            if (!within) {
+              menu.setAttribute('hidden', '');
+              toggle.setAttribute('aria-expanded', 'false');
+            }
+          }
+        });
+
+        // Handle selection
         menu.addEventListener('click', (ev) => {
           const btn = ev.target.closest('button[data-scale]');
           if (!btn) return;
           const pct = parseInt(btn.getAttribute('data-scale'), 10);
           window.setUIScale(pct);
+          // Hide after selection
+          menu.setAttribute('hidden', '');
+          toggle.setAttribute('aria-expanded', 'false');
         });
+
         // Ensure a default if storage was empty
         if (!window.uiScalePct) window.uiScalePct = 25;
         updateScaleButtons();
@@ -169,7 +214,7 @@
 
       window.addEventListener('resize', applyScale);
       window.addEventListener('DOMContentLoaded', () => {
-        bindScaleButtons();
+        bindScaleUI();
         applyScale();
       });
       // Safety: run again shortly after load in case WebView resizes
