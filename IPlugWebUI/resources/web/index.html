@@ -49,7 +49,7 @@
       }
 
       /* Top-right UI scale toggle */
-      .ui-scale { position: absolute; top: 10px; right: 10px; z-index: 100000; }
+      .ui-scale { position: fixed; top: 10px; right: 10px; z-index: 100000; }
       .ui-scale-toggle {
         appearance: none;
         border: 1px solid rgba(255,255,255,0.25);
@@ -116,8 +116,8 @@
 
     <!-- Responsive scaling to fit host container while preserving aspect ratio -->
     <script>
-      // Persisted UI scale percentage (default 25)
-      window.uiScalePct = parseInt(localStorage.getItem('uiScalePct') || '25', 10);
+      // Persisted UI scale percentage (default 25) using v2 key to avoid old 50% values
+      window.uiScalePct = parseInt(localStorage.getItem('uiScalePctV2') || '25', 10);
 
       function applyScale() {
         const getCssPx = (name) => {
@@ -160,7 +160,7 @@
       window.setUIScale = function(pct) {
         const v = Math.max(10, Math.min(400, parseInt(pct, 10) || 50));
         window.uiScalePct = v;
-        try { localStorage.setItem('uiScalePct', String(v)); } catch {}
+        try { localStorage.setItem('uiScalePctV2', String(v)); } catch {}
         updateScaleButtons();
         applyScale();
       }
