@@ -106,16 +106,23 @@
         if (!designW || !designH || !containerW || !containerH) return;
         const root = document.getElementById('root');
 
-        // Size root to design pixels; WebView zoom handles the scale on Windows
+        // Preferred visual scale is 50%; adapt down to fit smaller containers
+        const preferred = 0.5;
+        const fit = Math.min(containerW / designW, containerH / designH);
+        const scale = Math.max(0.1, Math.min(preferred, fit));
+
+        // Size root to design pixels and scale visually
         root.style.width = designW + 'px';
         root.style.height = designH + 'px';
-        root.style.transform = 'none';
+        root.style.transform = `scale(${scale})`;
         root.style.transformOrigin = 'top left';
         root.style.position = 'absolute';
 
-        // Align to top-left of container
-        root.style.left = `0px`;
-        root.style.top = `0px`;
+        // Center the GUI at the visual size within the container
+        const left = (containerW - designW * scale) / 2;
+        const top = (containerH - designH * scale) / 2;
+        root.style.left = `${Math.max(0, left)}px`;
+        root.style.top = `${Math.max(0, top)}px`;
 
         // Reveal content and remove loading overlay
         root.classList.add('loaded');
