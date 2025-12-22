@@ -55,13 +55,14 @@
         border: 1px solid rgba(255,255,255,0.25);
         background: rgba(255,255,255,0.10);
         color: #f0e8dc;
-        font: 600 11px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font: 600 13px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         padding: 6px 8px;
         border-radius: 8px;
         cursor: pointer;
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
       }
+      .ui-scale-toggle:hover { background: rgba(255,255,255,0.16); }
       .ui-scale-menu {
         position: absolute;
         margin-top: 8px;
@@ -99,7 +100,7 @@
 
     <!-- Top-right toggle button + dropdown menu for UI scale -->
     <div class="ui-scale" id="ui-scale">
-      <button class="ui-scale-toggle" id="ui-scale-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="ui-scale-menu" title="UI Scale">UI</button>
+      <button class="ui-scale-toggle" id="ui-scale-toggle" aria-label="UI scale" aria-haspopup="true" aria-expanded="false" aria-controls="ui-scale-menu" title="UI scale"><span aria-hidden="true">⚙</span></button>
       <div class="ui-scale-menu" id="ui-scale-menu" role="menu" hidden>
         <button role="menuitem" data-scale="100">100%</button>
         <button role="menuitem" data-scale="50">50%</button>
