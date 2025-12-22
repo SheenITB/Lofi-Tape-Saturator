@@ -94,8 +94,8 @@
 
     <!-- Responsive scaling to fit host container while preserving aspect ratio -->
     <script>
-      // Persisted UI scale percentage (default 50)
-      window.uiScalePct = parseInt(localStorage.getItem('uiScalePct') || '50', 10);
+      // Persisted UI scale percentage (default 25)
+      window.uiScalePct = parseInt(localStorage.getItem('uiScalePct') || '25', 10);
 
       function applyScale() {
         const getCssPx = (name) => {
@@ -111,7 +111,7 @@
         if (!designW || !designH || !containerW || !containerH) return;
 
         const fitScale = Math.min(containerW / designW, containerH / designH);
-        const userScale = Math.max(0.1, (Number(window.uiScalePct) || 50) / 100);
+        const userScale = Math.max(0.1, (Number(window.uiScalePct) || 25) / 100);
         // Final scale cannot exceed the fit-to-container value
         const scale = Math.max(0.1, Math.min(fitScale, userScale));
         const root = document.getElementById('root');
@@ -163,7 +163,7 @@
           window.setUIScale(pct);
         });
         // Ensure a default if storage was empty
-        if (!window.uiScalePct) window.uiScalePct = 50;
+        if (!window.uiScalePct) window.uiScalePct = 25;
         updateScaleButtons();
       }
 
