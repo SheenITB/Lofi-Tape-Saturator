@@ -153,4 +153,8 @@ private:
   void UpdateToneFilters();
   void UpdateLowPassFilter();
   void RefreshWowFlutterIncrements();
+
+  // Enforce host wrapper size consistency on open (for FL Studio scaling quirks)
+  std::atomic<bool> mVerifySizePending { false };
+  int mVerifyAttempts = 0;
 };

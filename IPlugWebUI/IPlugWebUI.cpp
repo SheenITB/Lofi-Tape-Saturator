@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
+#include <cstdlib>
 
 namespace
 {
@@ -639,6 +641,44 @@ void IPlugWebUI::OnIdle()
     EvaluateJavaScript("if(window.applyScale){window.applyScale()}");
   }
 
+  // Verify wrapper size and correct if host opened too small (e.g., FL Studio at 25%)
+  static int sVerifyCounter = 0;
+  if (mVerifySizePending.load(std::memory_order_acquire))
+  {
+    if ((++sVerifyCounter % 30) == 0 && mVerifyAttempts < 3)
+    {
+      ++mVerifyAttempts;
+      EvaluateJavaScript(
+        "(function(){try{return JSON.stringify({w:window.innerWidth,h:window.innerHeight})}catch(e){return '{}'}})()",
+        [this](const char* json){
+          if (!json) return;
+          const char* wpos = std::strstr(json, "\"w\":");
+          const char* hpos = std::strstr(json, "\"h\":");
+          if (!wpos || !hpos) return;
+          const double w = std::strtod(wpos+4, nullptr);
+          const double h = std::strtod(hpos+4, nullptr);
+          if (w <= 0.0 || h <= 0.0) return;
+          const double targetW = 250.0, targetH = 350.0;
+          const double dw = std::abs(w - targetW);
+          const double dh = std::abs(h - targetH);
+          if (dw > 1.0 || dh > 1.0)
+          {
+            const double f = targetW / w; // e.g. if w=125 => f=2 => ask 500x700
+            const int newW = static_cast<int>(std::round(targetW * f));
+            const int newH = static_cast<int>(std::round(targetH * f));
+            Resize(newW, newH);
+          }
+          else
+          {
+            mVerifySizePending.store(false, std::memory_order_release);
+          }
+        }
+      );
+      if (mVerifyAttempts >= 3)
+        mVerifySizePending.store(false, std::memory_order_release);
+    }
+  }
+
   if (!mDriveVUQueued.exchange(false, std::memory_order_acq_rel))
     return;
 
@@ -659,6 +699,8 @@ void IPlugWebUI::OnUIOpen()
   mDriveVUQueued.store(true, std::memory_order_release);
   // Force host container to match fixed 50% GUI size (250x350)
   Resize(250, 350);
+  mVerifySizePending.store(true, std::memory_order_release);
+  mVerifyAttempts = 0;
 }
 
 void IPlugWebUI::OnUIClose()
