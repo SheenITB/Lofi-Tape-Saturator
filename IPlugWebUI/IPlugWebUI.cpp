@@ -657,6 +657,8 @@ void IPlugWebUI::OnUIOpen()
   Plugin::OnUIOpen();
   mUIOpen.store(true, std::memory_order_release);
   mDriveVUQueued.store(true, std::memory_order_release);
+  // Force host container to match fixed 50% GUI size (250x350)
+  Resize(250, 350);
 }
 
 void IPlugWebUI::OnUIClose()
